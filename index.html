@@ -242,7 +242,9 @@
       <div class="total stat danger"><strong>Expenses</strong><span id="tot-expense">0.00</span></div>
       <div class="total stat neutral"><strong>Net</strong><span id="tot-net">0.00</span></div>
     </div>
-    <div class="flex" style="justify-content:flex-end; margin-top:8px;">
+    <div class="flex" style="justify-content:flex-end; margin-top:8px; gap:8px;">
+      <button class="btn secondary" id="health-check">Health</button>
+      <button class="btn secondary" id="write-test">Write Test</button>
       <button class="btn secondary" id="refresh-view">Refresh</button>
     </div>
     <div class="card" style="margin-top:12px">
@@ -307,14 +309,17 @@ function jsonp(params, cbName){
 // --- POST (opaque OK). We don't read body; we refresh via GET after. ---
 async function apiPost(action, payload){
   try{
+    // Use no-cors + no custom headers so the request is a "simple" POST
+    // This avoids CORS preflight that GH Pages would fail. Apps Script will still
+    // receive the raw JSON string in e.postData.contents.
     await fetch(API_BASE, {
       method: 'POST',
-      mode: 'no-cors', // opaque, but request is delivered
-      headers: { 'Content-Type': 'application/json' },
+      mode: 'no-cors',
       body: JSON.stringify({ action, payload })
     });
     return true;
   }catch(e){ return false; }
+}
 }
 
 // --- Toast ---
@@ -409,6 +414,15 @@ document.getElementById('exp-submit').addEventListener('click', async () => {
 const filterIds = ['filter-year','filter-month','filter-source','filter-category','filter-start','filter-end'];
 filterIds.forEach(id => document.getElementById(id).addEventListener('change', refreshView));
 document.getElementById('refresh-view').addEventListener('click', refreshView);
+// Diagnostics buttons
+document.getElementById('health-check').addEventListener('click', ()=>{
+  window.handleHealth = (d)=>{ if(d && d.ok){ toast(`Health OK • Income rows: ${d.incomeRows} • Expenses rows: ${d.expensesRows}`); } else { toast('Health failed', false);} };
+  jsonp({action:'health'}, 'handleHealth');
+});
+document.getElementById('write-test').addEventListener('click', ()=>{
+  window.handleAppendTest = (d)=>{ if(d && d.ok){ toast('Write test appended to Income.'); refreshView(); } else { toast('Write test failed', false);} };
+  jsonp({action:'appendtest'}, 'handleAppendTest');
+});
 
 function getFilters(){
   const year = Number(document.getElementById('filter-year').value) || null;
