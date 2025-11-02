@@ -1,3 +1,4 @@
+<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8" />
@@ -304,6 +305,13 @@ function jsonp(params, cbName){
   document.body.appendChild(s);
 }
 function jsonpWrite(action, params, cbName){ jsonp(Object.assign({action}, params||{}), cbName); }
+// JSONP with timeout guard so buttons don't stay disabled if backend doesn't answer
+function jsonpWithTimeout(action, params, cbName, onTimeout, ms){
+  let done = false; const guard = setTimeout(()=>{ if(!done){ onTimeout && onTimeout(); } }, ms||7000);
+  const wrapped = cbName + '_wrap_' + Math.random().toString(36).slice(2);
+  window[wrapped] = (res)=>{ done = true; clearTimeout(guard); try{ window[cbName] && window[cbName](res); } finally { delete window[wrapped]; } };
+  jsonpWrite(action, params, wrapped);
+}
 
 // --- Toast ---
 function toast(msg, ok=true){
@@ -413,13 +421,12 @@ window.handleLogs = (payload)=>{
       const sheetName = btn.getAttribute('data-sheet');
       const sheetRow = btn.getAttribute('data-row');
       const summary = [...btn.closest('tr').children].slice(0,5).map(td=>td.textContent.trim()).join(' | ');
-      if(!confirm(`Delete this entry?\n\n${summary}`)) return;
+      if(!confirm(`Delete this entry?
+
+${summary}`)) return;
       btn.disabled = true;
-      window.handleDelete = (res)=>{
-        if(res && res.ok){ toast('Deleted.'); refreshView(); }
-        else { toast('Delete failed', false); btn.disabled=false; }
-      };
-      jsonpWrite('delete', { sheetName, sheetRow }, 'handleDelete');
+      window.handleDelete = (res)=>{ if(res && res.ok){ toast('Deleted.'); refreshView(); } else { toast('Delete failed', false); btn.disabled=false; } };
+      jsonpWithTimeout('delete', { sheetName, sheetRow }, 'handleDelete', ()=>{ btn.disabled=false; toast('Delete timed out', false); }, 7000);
     });
   });
 };
@@ -437,7 +444,7 @@ document.getElementById('inc-submit').addEventListener('click', ()=>{
   if(!source) return toast('Select a source.', false);
   const btn = document.getElementById('inc-submit'); btn.disabled = true;
   window.handleWriteIncome = (res)=>{ btn.disabled=false; if(res && res.ok){ toast('Income saved.'); document.getElementById('inc-amount').value=''; document.getElementById('inc-remarks').value=''; refreshView(); } else { toast('Save failed', false);} };
-  jsonpWrite('addincome', { dateISO, amount, source, remarks }, 'handleWriteIncome');
+  jsonpWithTimeout('addincome', { dateISO, amount, source, remarks }, 'handleWriteIncome', ()=>{ btn.disabled=false; toast('Income save timed out', false); }, 7000);
 });
 
 // --- Expense submit ---
@@ -452,7 +459,7 @@ document.getElementById('exp-submit').addEventListener('click', ()=>{
   if(!source) return toast('Select a source.', false);
   const btn = document.getElementById('exp-submit'); btn.disabled = true;
   window.handleWriteExpense = (res)=>{ btn.disabled=false; if(res && res.ok){ toast('Expense saved.'); document.getElementById('exp-amount').value=''; document.getElementById('exp-remarks').value=''; refreshView(); } else { toast('Save failed', false);} };
-  jsonpWrite('addexpense', { dateISO, amount, source, category, remarks }, 'handleWriteExpense');
+  jsonpWithTimeout('addexpense', { dateISO, amount, source, category, remarks }, 'handleWriteExpense', ()=>{ btn.disabled=false; toast('Expense save timed out', false); }, 7000);
 });
 
 // --- Filters & diagnostics ---
