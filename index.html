@@ -74,9 +74,8 @@
   .delete-btn { background: transparent; color: var(--danger); border:1px solid var(--danger); padding:8px 12px; border-radius:999px; cursor:pointer; font-weight:800; }
   .delete-btn:hover { background: rgba(239,68,68,.1); }
 
-  /* Responsive rows */
-  @media (max-width: 640px){
-    thead { display:none; }
+  /* Responsive rows — keep a real table on mobile */
+/* Removed card-style rows so one real table row = one entry even on phones. */
     table, tbody, tr, td { display:block; width:100%; }
     tr { background: linear-gradient(180deg, var(--panel), var(--panel-2)); border:1px solid var(--border); border-radius:14px; margin-bottom:10px; overflow:hidden; }
     td { border: none; padding: 10px 12px 10px 112px; position: relative; min-height: 44px; }
@@ -272,6 +271,18 @@ function toast(msg, ok=true){
   t.classList.add('show'); setTimeout(()=>t.classList.remove('show'), 1800);
 }
 
+// --- Date formatter (Month Day, Year) ---
+function formatMDY(iso){
+  const d = new Date(iso);
+  if (isNaN(d)) return iso || '';
+  return d.toLocaleDateString(undefined, { month:'short', day:'numeric', year:'numeric' });
+}
+function toast(msg, ok=true){
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.style.borderColor = ok ? 'var(--ok)' : 'var(--danger)';
+  t.classList.add('show'); setTimeout(()=>t.classList.remove('show'), 1800);
+}
+
 // --- Tabs ---
 function goTab(key){
   document.querySelectorAll('.tab-btn').forEach(b=>{
@@ -401,7 +412,7 @@ window.handleLogs = (payload)=>{
     const tr = document.createElement('tr');
     tr.innerHTML = `
       <td data-col="Type">${r.type}</td>
-      <td data-col="Date">${r.dateISO}</td>
+      <td data-col="Date">${formatMDY(r.dateISO)}</td>
       <td data-col="Amount">${Number(r.amount).toFixed(2)}</td>
       <td data-col="Source">${r.source||''}</td>
       <td data-col="Category">${r.category||''}</td>
@@ -416,7 +427,9 @@ window.handleLogs = (payload)=>{
       const sheetName = delBtn.getAttribute('data-sheet');
       const sheetRow = delBtn.getAttribute('data-row');
       const summary = [...delBtn.closest('tr').children].slice(0,5).map(td=>td.textContent.trim()).join(' | ');
-      if(!confirm(`Delete this entry?\n\n${summary}`)) return;
+      if(!confirm(`Delete this entry?
+
+${summary}`)) return;
       delBtn.disabled = true;
       window.handleDelete = (res)=>{ if(res && res.ok){ toast('Deleted.'); refreshView(); } else { toast('Delete failed', false); delBtn.disabled=false; } };
       jsonpWithTimeout('delete', { sheetName, sheetRow }, 'handleDelete', ()=>{ delBtn.disabled=false; toast('Delete timed out', false); }, 7000);
