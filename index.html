@@ -203,7 +203,20 @@ function normalizeDateString(d) {
   if (!isNaN(dt.getTime())) return normalizeDateString(dt);
   return "";
 }
-function fmtNice(iso){ var o = new Date(iso); return o.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}); }
+function fmtNice(iso){
+  // Avoid timezone shifts from `new Date('YYYY-MM-DD')` (often parsed as UTC).
+  if(!iso || typeof iso !== 'string' || iso.length < 10) return '';
+  var y = Number(iso.slice(0,4));
+  var m = Number(iso.slice(5,7));
+  var d = Number(iso.slice(8,10));
+  var dt = new Date(y, m-1, d); // local date
+  try {
+    return dt.toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' });
+  } catch(_) {
+    var MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    return MONTHS[m-1] + ' ' + d + ', ' + y;
+  }
+}
 
 function isPlainNumberStr(s){ return typeof s==='string' && /^\d+(?:\.\d+)?$/.test(s.trim()); }
 function isIsoDateStr(s){ return typeof s==='string' && /^\d{4}-\d{2}-\d{2}/.test(s); }
@@ -387,7 +400,9 @@ entryForm.addEventListener("submit", function(e){
   var modalText = document.getElementById('iosModalText');
   modalText.textContent = msg; modal.style.display = 'flex';
 
-  var payload = { type: currentMode, date: dateInput.value, amount: amt };
+  // Include date parts to let backend write a timezone-safe Date
+var dISO = dateInput.value; // 'YYYY-MM-DD'
+var payload = { type: currentMode, date: dISO, dateY: Number(dISO.slice(0,4)), dateM: Number(dISO.slice(5,7)), dateD: Number(dISO.slice(8,10)), amount: amt };
   if (currentMode === "expense") { payload.method = methodSource.value; payload.category = category.value; }
   else { payload.source = methodSource.value; }
 
