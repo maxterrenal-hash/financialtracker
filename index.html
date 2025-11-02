@@ -306,19 +306,10 @@ function jsonp(params, cbName){
   document.body.appendChild(s);
 }
 
-// --- POST (opaque OK). We don't read body; we refresh via GET after. ---
-async function apiPost(action, payload){
-  try{
-    // Use no-cors + no custom headers so the request is a "simple" POST
-    // This avoids CORS preflight that GH Pages would fail. Apps Script will still
-    // receive the raw JSON string in e.postData.contents.
-    await fetch(API_BASE, {
-      method: 'POST',
-      mode: 'no-cors',
-      body: JSON.stringify({ action, payload })
-    });
-    return true;
-  }catch(e){ return false; }
+// --- JSONP WRITE (bypass POST/CORS) ---
+function jsonpWrite(action, params, cbName){
+  const qp = Object.assign({action}, params);
+  jsonp(qp, cbName);
 }
 
 // --- Toast ---
@@ -377,7 +368,7 @@ initUI();
 function parseAmount(el){ const v = Number(el.value); if(!isFinite(v) || v<=0) return null; return +v.toFixed(2); }
 
 // --- Income submit ---
-document.getElementById('inc-submit').addEventListener('click', async () => {
+document.getElementById('inc-submit').addEventListener('click', () => {
   const dateISO = document.getElementById('inc-date').value;
   const amount = parseAmount(document.getElementById('inc-amount'));
   const source = document.getElementById('inc-source').value;
@@ -386,91 +377,8 @@ document.getElementById('inc-submit').addEventListener('click', async () => {
   if(amount===null) return toast('Amount must be > 0.', false);
   if(!source) return toast('Select a source.', false);
   const btn = document.getElementById('inc-submit'); btn.disabled = true;
-  const ok = await apiPost('addincome', {dateISO, amount, source, remarks});
-  if(ok){ toast('Income saved.'); document.getElementById('inc-amount').value=''; document.getElementById('inc-remarks').value=''; refreshView(); }
-  else { toast('Failed to save.', false); }
-  btn.disabled=false;
-});
-
-// --- Expense submit ---
-document.getElementById('exp-submit').addEventListener('click', async () => {
-  const dateISO = document.getElementById('exp-date').value;
-  const amount = parseAmount(document.getElementById('exp-amount'));
-  const source = document.getElementById('exp-source').value;
-  const category = document.getElementById('exp-category').value.trim();
-  const remarks = document.getElementById('exp-remarks').value.trim();
-  if(!dateISO) return toast('Pick a date.', false);
-  if(amount===null) return toast('Amount must be > 0.', false);
-  if(!source) return toast('Select a source.', false);
-  const btn = document.getElementById('exp-submit'); btn.disabled = true;
-  const ok = await apiPost('addexpense', {dateISO, amount, source, category, remarks});
-  if(ok){ toast('Expense saved.'); document.getElementById('exp-amount').value=''; document.getElementById('exp-remarks').value=''; refreshView(); }
-  else { toast('Failed to save.', false); }
-  btn.disabled=false;
-});
-
-// --- View (filters + load) ---
-const filterIds = ['filter-year','filter-month','filter-source','filter-category','filter-start','filter-end'];
-filterIds.forEach(id => document.getElementById(id).addEventListener('change', refreshView));
-document.getElementById('refresh-view').addEventListener('click', refreshView);
-// Diagnostics buttons
-document.getElementById('health-check').addEventListener('click', ()=>{
-  window.handleHealth = (d)=>{ if(d && d.ok){ toast(`Health OK • Income rows: ${d.incomeRows} • Expenses rows: ${d.expensesRows}`); } else { toast('Health failed', false);} };
-  jsonp({action:'health'}, 'handleHealth');
-});
-document.getElementById('write-test').addEventListener('click', ()=>{
-  window.handleAppendTest = (d)=>{ if(d && d.ok){ toast('Write test appended to Income.'); refreshView(); } else { toast('Write test failed', false);} };
-  jsonp({action:'appendtest'}, 'handleAppendTest');
-});
-
-function getFilters(){
-  const year = Number(document.getElementById('filter-year').value) || null;
-  const month = document.getElementById('filter-month').value ? Number(document.getElementById('filter-month').value) : null;
-  const source = document.getElementById('filter-source').value || null;
-  const category = document.getElementById('filter-category').value || null;
-  const start = document.getElementById('filter-start').value || null;
-  const end = document.getElementById('filter-end').value || null;
-  return { year, month, source, category, start, end };
-}
-
-window.handleLogs = ({ok, rows, totals, sources, categories}) => { if(!ok) return;
-  document.getElementById('tot-income').textContent = (totals.income||0).toFixed(2);
-  document.getElementById('tot-expense').textContent = (totals.expense||0).toFixed(2);
-  const netEl = document.getElementById('tot-net');
-  const netVal = (typeof totals.net === 'number' ? totals.net : ((totals.income||0)-(totals.expense||0)));
-  netEl.textContent = netVal.toFixed(2);
-  netEl.classList.remove('ok','danger'); if (netVal > 0) netEl.classList.add('ok'); else if (netVal < 0) netEl.classList.add('danger');
-  // Filter dropdowns (preserve current)
-  const keep = (sel, items)=>{ const cur = sel.value; sel.innerHTML = '<option value="">All</option>'; (items||[]).forEach(v=>{ const o=document.createElement('option'); o.value=v; o.textContent=v; sel.appendChild(o); }); if ([...sel.options].some(o=>o.value===cur)) sel.value=cur; };
-  keep(document.getElementById('filter-source'), sources);
-  keep(document.getElementById('filter-category'), categories);
-  // Chips
-  const chips = document.getElementById('active-filters'); chips.innerHTML='';
-  const f = getFilters(); const addChip=(label,val)=>{ if(!val) return; const c=document.createElement('div'); c.className='chip'; c.textContent = label+': '+val; chips.appendChild(c); };
-  addChip('Year', f.year); addChip('Month', f.month); addChip('Source', f.source); addChip('Category', f.category);
-  // Rows
-  const tbody = document.getElementById('log-body'); tbody.innerHTML='';
-  (rows||[]).forEach(r=>{
-    const tr = document.createElement('tr');
-    tr.innerHTML = `
-      <td data-col="Type">${r.type}</td>
-      <td data-col="Date">${r.dateISO}</td>
-      <td data-col="Amount">${Number(r.amount).toFixed(2)}</td>
-      <td data-col="Source">${r.source||''}</td>
-      <td data-col="Category">${r.category||''}</td>
-      <td data-col="Actions"><button class="delete-btn" data-sheet="${r.sheetName}" data-row="${r.sheetRow}">Delete</button></td>`;
-    tbody.appendChild(tr);
-  });
-  // Bind deletes
-  tbody.querySelectorAll('.delete-btn').forEach(btn=>{
-    btn.addEventListener('click', async ()=>{
-      const sheet = btn.getAttribute('data-sheet'); const row = Number(btn.getAttribute('data-row'));
-      const summary = [...btn.closest('tr').children].slice(0,5).map(td=>td.textContent.trim()).join(' | ');
-      if(!confirm(`Delete this entry?
-
-${summary}`)) return;
-      btn.disabled = true; const ok = await apiPost('delete', { sheetName: sheet, sheetRow: row });
-      if(ok){ toast('Deleted.'); refreshView(); } else { toast('Delete failed.', false); btn.disabled=false; }
+      window.handleDelete = (res)=>{ if(res && res.ok){ toast('Deleted.'); refreshView(); } else { toast('Delete failed', false); btn.disabled=false; } };
+      jsonpWrite('delete', { sheetName: sheet, sheetRow: row }, 'handleDelete');
     });
   });
 };
