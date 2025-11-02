@@ -4,7 +4,7 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <meta name="color-scheme" content="dark" />
-<title>Financial Tracker — Preview (Mock)</title>
+<title>Financial Tracker</title>
 <style>
   :root {
     --bg: #0b0f14;
@@ -29,7 +29,7 @@
 
   /* Tabs mimic HHA pills and stick to top on mobile */
   .tabs { position: sticky; top: 0; z-index: 50; display:flex; gap:8px; margin:0 0 12px; padding: 8px 0; background: linear-gradient(180deg, rgba(11,15,20,.95), rgba(11,15,20,.8)); backdrop-filter: blur(6px); }
-  .tab-btn { flex:1; text-align:center; background:var(--panel); border:1px solid var(--border); color:var(--text); padding:12px 10px; border-radius:999px; cursor:pointer; font-weight:700; font-size: 0.95rem; }
+  .tab-btn { flex:1; text-align:center; background:var(--panel); border:1px solid var(--border); color:var(--text); padding:12px 10px; border-radius:999px; cursor:pointer; font-weight:700; font-size: 0.95rem; min-width:0; }
   .tab-btn.active { background: var(--accent); border-color: var(--accent); }
 
   /* Cards */
@@ -105,7 +105,7 @@
   /* Stats bar: 3 consistent cards (Income, Expenses, Net) */
   .totals.stats { display:grid; grid-template-columns: repeat(3, 1fr); gap:8px; align-items:stretch; }
   
-  .total.stat { text-align:center; padding:12px; border-radius:14px; border:1px solid var(--border); background: linear-gradient(180deg, var(--panel), var(--panel-2)); }
+  .total.stat { text-align:center; padding:12px; border-radius:14px; border:1px solid var(--border); background: linear-gradient(180deg, var(--panel), var(--panel-2)); min-width:0; }
   .total.stat strong { display:block; font-size:.78rem; color:var(--muted); font-weight:800; letter-spacing:.2px; margin-bottom:4px; }
   .total.stat span { display:block; font-size:1.25rem; font-weight:900; }
   .total.stat.ok span { color: var(--ok); }
@@ -132,12 +132,13 @@
     .total.stat strong { font-size: .68rem; }
     .total.stat span { font-size: .98rem; }
   }
+  /* Mobile hardening: prevent horizontal scroll and allow stat cards/buttons to shrink safely */
+  html, body { overflow-x: hidden; }
 </style>
 </head>
 <body>
 <div class="wrap">
-  <h1>Financial Tracker — Preview</h1>
-  <div class="note">This is a sandbox preview with mocked data. Buttons save to memory only. In your Apps Script deployment, everything writes to Google Sheets for real.</div>
+  <h1>Financial Tracker</h1>
 
   <div class="tabs">
     <button class="tab-btn active" data-tab="income">Income</button>
