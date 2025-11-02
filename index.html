@@ -134,6 +134,11 @@
   }
   /* Mobile hardening: prevent horizontal scroll and allow stat cards/buttons to shrink safely */
   html, body { overflow-x: hidden; }
+  /* Mobile fix: keep log date pickers within table width */
+  .table-controls { max-width: 100%; }
+  .table-controls .date-inline { min-width: 0; }
+  .table-controls input[type="date"] { width:100%; max-width:100%; min-width:0; }
+  @media (max-width: 640px){ .table-controls { grid-template-columns: 1fr; } }
 </style>
 </head>
 <body>
