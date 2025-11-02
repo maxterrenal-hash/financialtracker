@@ -2,9 +2,9 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8" />
-<meta name="color-scheme" content="dark" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Financial Tracker</title>
+<meta name="color-scheme" content="dark" />
+<title>Financial Tracker — Preview (Mock)</title>
 <style>
   :root {
     --bg: #0b0f14;
@@ -12,75 +12,132 @@
     --panel-2: #141a22;
     --text: #e6edf3;
     --muted: #aab6c3;
-    --accent: #4f46e5;   /* indigo */
-    --accent-2: #14b8a6; /* teal for "nice" moments */
+    --accent: #7c3aed; /* closer to the HHA violet accent */
+    --accent-2: #22d3ee; /* cyan for highlights */
     --danger: #ef4444;
     --ok: #22c55e;
     --input: #0f1720;
     --border: #1f2a37;
-    --chip: #1a2230;
+    --chip: #18202d;
     --row-alt: #0f141b;
-    --focus: #2563eb;
+    --focus: #7c3aed;
   }
-  html, body {
-    margin: 0; padding: 0; background: var(--bg); color: var(--text); font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Inter, "Helvetica Neue", Arial, "Apple Color Emoji","Segoe UI Emoji";
-  }
-  .wrap { max-width: 1100px; margin: 0 auto; padding: 20px; }
-  h1 { font-size: 1.4rem; margin: 0 0 12px; font-weight: 700; }
-  .tabs { display: flex; gap: 8px; margin-bottom: 14px; flex-wrap: wrap; }
-  .tab-btn {
-    background: var(--panel); border: 1px solid var(--border); color: var(--text);
-    padding: 10px 14px; border-radius: 10px; cursor: pointer; font-weight: 600;
-  }
+  html, body { margin:0; padding:0; background:var(--bg); color:var(--text); font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Inter, Arial; }
+  * { -webkit-tap-highlight-color: transparent; }
+  .wrap { width: 100%; max-width: 520px; margin: 0 auto; padding: 12px 14px 80px; }
+  h1 { font-size: 1.25rem; margin: 0 0 10px; font-weight: 800; letter-spacing: 0.2px; }
+
+  /* Tabs mimic HHA pills and stick to top on mobile */
+  .tabs { position: sticky; top: 0; z-index: 50; display:flex; gap:8px; margin:0 0 12px; padding: 8px 0; background: linear-gradient(180deg, rgba(11,15,20,.95), rgba(11,15,20,.8)); backdrop-filter: blur(6px); }
+  .tab-btn { flex:1; text-align:center; background:var(--panel); border:1px solid var(--border); color:var(--text); padding:12px 10px; border-radius:999px; cursor:pointer; font-weight:700; font-size: 0.95rem; }
   .tab-btn.active { background: var(--accent); border-color: var(--accent); }
-  .card {
-    background: linear-gradient(180deg, var(--panel), var(--panel-2));
-    border: 1px solid var(--border); border-radius: 14px; padding: 16px; margin-bottom: 14px;
-    box-shadow: 0 0 0 1px rgba(255,255,255,0.02) inset;
-  }
-  .row { display: grid; grid-template-columns: repeat(12, 1fr); gap: 10px; margin-bottom: 12px; }
-  .col-3 { grid-column: span 3; } .col-4 { grid-column: span 4; } .col-6 { grid-column: span 6; } .col-8 { grid-column: span 8; } .col-12 { grid-column: span 12; }
-  label { display: block; font-size: 0.9rem; margin-bottom: 6px; color: var(--muted); }
+
+  /* Cards */
+  .card { background: linear-gradient(180deg, var(--panel), var(--panel-2)); border:1px solid var(--border); border-radius:16px; padding:14px; margin-bottom:12px; box-shadow: 0 0 0 1px rgba(255,255,255,.02) inset; }
+
+  /* Mobile-first form grid */
+  .row { display:grid; grid-template-columns: 1fr; gap:10px; margin-bottom:10px; }
+  @media (min-width: 480px){ .row { grid-template-columns: repeat(12, 1fr); } .col-3 { grid-column: span 3; } .col-4 { grid-column: span 4; } .col-6 { grid-column: span 6; } .col-8 { grid-column: span 8; } .col-12 { grid-column: span 12; } }
+  label { display:block; font-size:.85rem; margin-bottom:6px; color:var(--muted); font-weight:600; }
+
   input[type="date"], input[type="number"], input[type="text"], select, datalist {
-    width: 100%; background: var(--input); color: var(--text);
-    border: 1px solid var(--border); border-radius: 10px; padding: 10px 12px;
-    outline: none;
+    width:100%; background:var(--input); color:var(--text); border:1px solid var(--border); border-radius:12px; padding:14px 12px; outline:none; font-size:16px; /* prevent iOS zoom */
   }
-  input:focus, select:focus { border-color: var(--focus); box-shadow: 0 0 0 3px rgba(37,99,235,0.2); }
-  .btn {
-    background: var(--accent); border: 1px solid var(--accent); color: white;
-    padding: 10px 14px; border-radius: 10px; cursor: pointer; font-weight: 700;
-  }
-  .btn:disabled { opacity: 0.5; cursor: not-allowed; }
-  .btn.secondary { background: transparent; border: 1px solid var(--border); }
-  .chips { display: flex; gap: 8px; flex-wrap: wrap; }
-  .chip { background: var(--chip); border: 1px solid var(--border); border-radius: 999px; padding: 6px 10px; font-size: 0.85rem; color: var(--muted); }
-  .totals { display: flex; gap: 10px; flex-wrap: wrap; }
-  .total { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 10px 12px; }
-  table { width: 100%; border-collapse: collapse; margin-top: 8px; }
-  th, td { text-align: left; padding: 10px 8px; border-bottom: 1px solid var(--border); }
-  thead th { font-size: 0.85rem; color: var(--muted); }
-  tbody tr:nth-child(even) { background: var(--row-alt); }
+  input:focus, select:focus { border-color: var(--focus); box-shadow: 0 0 0 3px rgba(124,58,237,.25); }
+
+  .btn { width:100%; background:var(--accent); border:1px solid var(--accent); color:white; padding:14px 16px; border-radius:12px; cursor:pointer; font-weight:800; font-size:1rem; letter-spacing:.2px; }
+  .btn.secondary { width:auto; background: transparent; border:1px solid var(--border); padding:12px 14px; border-radius:12px; font-weight:700; }
+  .btn:disabled { opacity:.6; cursor:not-allowed; }
+
+  .chips { display:flex; gap:8px; flex-wrap:wrap; }
+  .chip { background:var(--chip); border:1px solid var(--border); border-radius:999px; padding:6px 10px; font-size:.8rem; color:var(--muted); }
+
+  .totals { display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
+  .total { background:var(--panel); border:1px solid var(--border); border-radius:12px; padding:8px 10px; font-weight:700; }
   .danger { color: var(--danger); }
   .ok { color: var(--ok); }
-  .toast {
-    position: fixed; right: 16px; bottom: 16px; background: var(--panel); border: 1px solid var(--border);
-    color: var(--text); padding: 10px 14px; border-radius: 10px; opacity: 0; transform: translateY(10px);
-    transition: all .2s ease; pointer-events: none;
+
+  /* Table becomes card list on small screens */
+  table { width:100%; border-collapse: collapse; margin-top:8px; table-layout: fixed; }
+  th, td { text-align:left; padding:10px 8px; border-bottom:1px solid var(--border); word-break: break-word; overflow-wrap: anywhere; hyphens: auto; }
+  thead th { font-size:.8rem; color:var(--muted); }
+  tbody tr:nth-child(even) { background: var(--row-alt); }
+
+  @media (max-width: 640px){
+    thead { display:none; }
+    table, tbody, tr, td { display:block; width:100%; }
+    tr { background: linear-gradient(180deg, var(--panel), var(--panel-2)); border:1px solid var(--border); border-radius:14px; margin-bottom:10px; overflow:hidden; }
+    td { border: none; padding: 10px 12px 10px 112px; position: relative; min-height: 44px; }
+    td::before { content: attr(data-col); position: absolute; left: 12px; top: 10px; color: var(--muted); font-size: .78rem; font-weight: 700; letter-spacing: .2px; }
+    td:last-child { padding-left: 12px; display:flex; justify-content:flex-end; }
   }
-  .toast.show { opacity: 1; transform: translateY(0); }
-  .flex { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
-  .spacer { flex: 1; }
-  .delete-btn {
-    background: transparent; color: var(--danger); border: 1px solid var(--danger); padding: 6px 10px;
-    border-radius: 8px; cursor: pointer; font-weight: 700;
+
+  .toast { position:fixed; right:12px; bottom:12px; background:var(--panel); border:1px solid var(--border); color:var(--text); padding:10px 14px; border-radius:12px; opacity:0; transform: translateY(10px); transition: all .2s ease; pointer-events:none; }
+  .toast.show { opacity:1; transform: translateY(0); }
+
+  /* Sticky bottom action for mobile submit forms like HHA */
+  .sticky-actions { position: sticky; bottom: 0; padding-top: 8px; background: linear-gradient(180deg, transparent, rgba(11,15,20,.9)); }
+  .table-controls { display:grid; grid-template-columns: 1fr 1fr; gap:8px; width:100%; }
+  .table-controls .date-inline label { display:block; font-size:.78rem; color:var(--muted); margin-bottom:4px; font-weight:700; }
+  .table-controls input[type="date"] { width:100%; background:var(--input); color:var(--text); border:1px solid var(--border); border-radius:10px; padding:10px 12px; font-size:16px; }
+  @media (max-width: 420px){ .table-controls { grid-template-columns: 1fr; } }
+  /* Ensure long text wraps inside table borders */
+  td[data-col="Category"], td[data-col="Remarks"],
+  tbody td:nth-child(5), tbody td:nth-child(6) { white-space: normal; }
+  /* Constrain last column actions so it doesn't push layout */
+  td[data-col="Actions"] { white-space: nowrap; }
+  /* Keep inputs from exceeding their containers */
+  *, *::before, *::after { box-sizing: border-box; }
+  input, select, textarea { max-width: 100%; }
+  #inc-remarks, #exp-remarks { display:block; width:100%; max-width:100%; }
+  .wrap { overflow-x: hidden; }
+  /* Combobox styling to match selects */
+  .combo { position: relative; }
+  .combo input {
+    appearance: none; -webkit-appearance: none; width: 100%;
+    background: var(--input); color: var(--text);
+    border: 1px solid var(--border); border-radius: 12px;
+    padding: 14px 40px 14px 12px; outline: none; font-size: 16px;
   }
-  .muted { color: var(--muted); font-size: 0.9rem; }
+  .combo input:focus { border-color: var(--focus); box-shadow: 0 0 0 3px rgba(124,58,237,.25); }
+  .combo::after { content: ""; position: absolute; right: 12px; top: 50%; transform: translateY(-25%);
+    width: 0; height: 0; border-left: 6px solid transparent; border-right: 6px solid transparent; border-top: 7px solid var(--muted); pointer-events: none; }
+  /* Stats bar: 3 consistent cards (Income, Expenses, Net) */
+  .totals.stats { display:grid; grid-template-columns: repeat(3, 1fr); gap:8px; align-items:stretch; }
+  
+  .total.stat { text-align:center; padding:12px; border-radius:14px; border:1px solid var(--border); background: linear-gradient(180deg, var(--panel), var(--panel-2)); }
+  .total.stat strong { display:block; font-size:.78rem; color:var(--muted); font-weight:800; letter-spacing:.2px; margin-bottom:4px; }
+  .total.stat span { display:block; font-size:1.25rem; font-weight:900; }
+  .total.stat.ok span { color: var(--ok); }
+  .total.stat.danger span { color: var(--danger); }
+  .total.stat.neutral span { color: var(--text); }
+  
+  .totals .spacer { display:none !important; }
+  .totals #refresh-view { grid-column: 1 / -1; justify-self: end; }
+  /* Log table polish for consistency */
+  .log-table thead th { text-transform: uppercase; letter-spacing:.04em; }
+  .log-table tbody tr { transition: background .15s ease, transform .05s ease; }
+  .log-table tbody tr:hover { background: rgba(124,58,237,.08); }
+  .delete-btn { background: transparent; color: var(--danger); border:1px solid var(--danger); padding:8px 12px; border-radius:999px; cursor:pointer; font-weight:800; }
+  .delete-btn:hover { background: rgba(239,68,68,.1); }
+  /* Tiny screens: keep 3 stats in a row but breathe with smaller type/padding */
+  @media (max-width: 400px){
+    .totals.stats { grid-template-columns: repeat(3, 1fr); }
+    .total.stat { padding: 8px; }
+    .total.stat strong { font-size: .72rem; }
+    .total.stat span { font-size: 1.05rem; }
+  }
+  @media (max-width: 340px){
+    .total.stat { padding: 6px; }
+    .total.stat strong { font-size: .68rem; }
+    .total.stat span { font-size: .98rem; }
+  }
 </style>
 </head>
 <body>
 <div class="wrap">
-  <h1>Financial Tracker</h1>
+  <h1>Financial Tracker — Preview</h1>
+  <div class="note">This is a sandbox preview with mocked data. Buttons save to memory only. In your Apps Script deployment, everything writes to Google Sheets for real.</div>
 
   <div class="tabs">
     <button class="tab-btn active" data-tab="income">Income</button>
@@ -88,7 +145,6 @@
     <button class="tab-btn" data-tab="view">View</button>
   </div>
 
-  <!-- Income Tab -->
   <section id="tab-income" class="card">
     <div class="row">
       <div class="col-4">
@@ -111,25 +167,28 @@
     <button class="btn" id="inc-submit">Submit Income</button>
   </section>
 
-  <!-- Expenses Tab -->
   <section id="tab-expenses" class="card" style="display:none">
     <div class="row">
-      <div class="col-3">
+      <div class="col-4">
         <label for="exp-date">Date</label>
         <input type="date" id="exp-date" />
       </div>
-      <div class="col-3">
+      <div class="col-4">
         <label for="exp-amount">Amount (PHP)</label>
         <input type="number" id="exp-amount" inputmode="decimal" min="0.01" step="0.01" placeholder="0.00" />
       </div>
-      <div class="col-3">
+      <div class="col-4">
         <label for="exp-source">Source</label>
         <select id="exp-source"></select>
       </div>
-      <div class="col-3">
+    </div>
+    <!-- Category moved below the first row as full width -->
+    <div class="row">
+      <div class="col-12">
         <label for="exp-category">Category</label>
-        <!-- free text allowed with suggestions -->
-        <input list="exp-categories" id="exp-category" placeholder="Start typing or pick..." />
+        <div class="combo">
+          <input list="exp-categories" id="exp-category" placeholder="Start typing or pick..." />
+        </div>
         <datalist id="exp-categories"></datalist>
       </div>
       <div class="col-12">
@@ -137,10 +196,11 @@
         <input type="text" id="exp-remarks" placeholder="optional" />
       </div>
     </div>
-    <button class="btn" id="exp-submit">Submit Expense</button>
+    <div class="sticky-actions">
+      <button class="btn" id="exp-submit">Submit Expense</button>
+    </div>
   </section>
 
-  <!-- View Tab -->
   <section id="tab-view" class="card" style="display:none">
     <div class="row">
       <div class="col-3">
@@ -167,21 +227,32 @@
       </div>
     </div>
 
-    <div class="totals">
-      <div class="total"><strong>Income:</strong> <span id="tot-income" class="ok">0.00</span></div>
-      <div class="total"><strong>Expenses:</strong> <span id="tot-expense" class="danger">0.00</span></div>
-      <div class="total"><strong>Net:</strong> <span id="tot-net">0.00</span></div>
-      <div class="spacer"></div>
+    <div class="totals stats">
+      <div class="total stat ok"><strong>Income</strong><span id="tot-income">0.00</span></div>
+      <div class="total stat danger"><strong>Expenses</strong><span id="tot-expense">0.00</span></div>
+      <div class="total stat neutral"><strong>Net</strong><span id="tot-net">0.00</span></div>
+    </div>
+    <div class="flex" style="justify-content:flex-end; margin-top:8px;">
       <button class="btn secondary" id="refresh-view">Refresh</button>
     </div>
-
     <div class="card" style="margin-top:12px">
       <div class="flex">
         <div class="muted">Log entries (Income + Expenses)</div>
         <div class="spacer"></div>
         <div class="chips" id="active-filters"></div>
       </div>
-      <table>
+      <!-- Inline date range just for the table width -->
+      <div class="table-controls" style="margin:8px 0 4px;">
+        <div class="date-inline">
+          <label for="filter-start">Start</label>
+          <input type="date" id="filter-start" />
+        </div>
+        <div class="date-inline">
+          <label for="filter-end">End</label>
+          <input type="date" id="filter-end" />
+        </div>
+      </div>
+      <table class="log-table">
         <thead>
           <tr>
             <th>Type</th>
@@ -189,7 +260,7 @@
             <th>Amount</th>
             <th>Source</th>
             <th>Category</th>
-            <th>Remarks</th>
+            
             <th></th>
           </tr>
         </thead>
@@ -202,8 +273,84 @@
 <div id="toast" class="toast"></div>
 
 <script>
-// Meta injected from server
-const META = <?= JSON.stringify(meta) ?>;
+// Mock META (replaces <?= JSON.stringify(meta) ?>)
+const META = {
+  incomeSources: ['Gcash','WCC','TMC-SL','Manila Med','Others'],
+  expenseSources: ['Cash','Gcash','BPI CC','SB CB','SB RC','UnionBank'],
+  defaultCategories: ['Duty Food','House Food','Kids','Personal','Utilities','Subscription','Media','Gas','Car','Grocery','Insurance','Clothing','Loan','Travel','Others']
+};
+
+// Minimal mock of google.script.run
+const google = {
+  script: {
+    run: {
+      withSuccessHandler(fn){ this._ok = fn; return this; },
+      withFailureHandler(fn){ this._fail = fn; return this; },
+      getMeta(){ setTimeout(()=>this._ok({ todayISO: new Date().toISOString().slice(0,10) }), 100); },
+      addIncome(payload){ mockAdd('Income', payload, this); },
+      addExpense(payload){ mockAdd('Expense', payload, this); },
+      fetchLogs(filters){ setTimeout(()=> this._ok(mockFetch(filters)), 120); },
+      deleteEntry(sheetName, sheetRow){ mockDelete(sheetName, sheetRow, this); }
+    }
+  }
+};
+
+// In-memory mock data
+let ledger = [
+  {type:'Income', dateISO:'2025-11-01', amount:12000, source:'Manila Med', category:'', remarks:'Honorarium', sheetName:'Income', sheetRow:2},
+  {type:'Expense', dateISO:'2025-11-01', amount:350, source:'Cash', category:'Duty Food', remarks:'ED snacks', sheetName:'Expenses', sheetRow:2},
+  {type:'Expense', dateISO:'2025-11-02', amount:2200, source:'Gcash', category:'Grocery', remarks:'Weekend run', sheetName:'Expenses', sheetRow:3},
+  {type:'Income', dateISO:'2025-11-03', amount:5000, source:'WCC', category:'', remarks:'Lecture', sheetName:'Income', sheetRow:3},
+];
+
+function nextRow(sheetName){
+  const same = ledger.filter(r => r.sheetName===sheetName);
+  return same.length ? Math.max(...same.map(r=>r.sheetRow))+1 : 2;
+}
+
+function mockAdd(type, payload, ctx){
+  const entry = {
+    type,
+    dateISO: payload.dateISO,
+    amount: Number(payload.amount),
+    source: payload.source,
+    category: type==='Expense' ? (payload.category||'') : '',
+    remarks: payload.remarks || '',
+    sheetName: type==='Income' ? 'Income' : 'Expenses',
+    sheetRow: nextRow(type==='Income' ? 'Income' : 'Expenses')
+  };
+  if (!(entry.amount>0)) { ctx._fail?.({message:'Amount must be > 0.'}); return; }
+  ledger.push(entry);
+  setTimeout(()=> ctx._ok?.({ok:true}), 120);
+}
+
+function mockFetch(filters){
+  let rows = ledger.slice();
+  rows = rows.filter(r => {
+    const [y,m,d] = r.dateISO.split('-').map(x=>parseInt(x,10));
+    const rowDate = new Date(y, m-1, d);
+    if (filters.year && y !== Number(filters.year)) return false;
+    if (filters.month && m !== Number(filters.month)) return false;
+    if (filters.start){ const s = new Date(filters.start); if (rowDate < s) return false; }
+    if (filters.end){ const e = new Date(filters.end); if (rowDate > e) return false; }
+    if (filters.source && filters.source !== '' && r.source !== filters.source) return false;
+    if (filters.category && filters.category !== '' && (r.category||'') !== filters.category) return false;
+    return true;
+  });
+  rows.sort((a,b)=> a.dateISO<b.dateISO ? 1 : a.dateISO>b.dateISO ? -1 : a.type.localeCompare(b.type));
+  const totals = rows.reduce((acc,r)=>{ if(r.type==='Income') acc.income+=(+r.amount||0); else acc.expense+=(+r.amount||0); return acc; }, {income:0,expense:0});
+  totals.net = +(totals.income - totals.expense).toFixed(2);
+  const sources = Array.from(new Set(rows.map(r=>r.source).filter(Boolean))).sort();
+  const categories = Array.from(new Set(rows.map(r=>r.category).filter(Boolean))).sort();
+  return { ok:true, rows, totals, sources, categories };
+}
+
+function mockDelete(sheetName, sheetRow, ctx){
+  const idx = ledger.findIndex(r => r.sheetName===sheetName && r.sheetRow===Number(sheetRow));
+  if (idx === -1) { ctx._fail?.({message:'Not found'}); return; }
+  ledger.splice(idx, 1);
+  setTimeout(()=> ctx._ok?.({ok:true}), 100);
+}
 
 // Tabs
 document.querySelectorAll('.tab-btn').forEach(btn => {
@@ -222,37 +369,25 @@ function toast(msg, ok=true) {
   t.textContent = msg;
   t.style.borderColor = ok ? 'var(--ok)' : 'var(--danger)';
   t.classList.add('show');
-  setTimeout(() => t.classList.remove('show'), 2000);
+  setTimeout(() => t.classList.remove('show'), 1800);
 }
 
-// Populate selects
+// Populate selects and init
 function initUI() {
-  // Defaults
   google.script.run.withSuccessHandler(({todayISO}) => {
     document.getElementById('inc-date').value = todayISO;
     document.getElementById('exp-date').value = todayISO;
   }).getMeta();
 
-  // Income sources
   const incSel = document.getElementById('inc-source');
-  META.incomeSources.forEach(v => {
-    const o = document.createElement('option'); o.value = o.textContent = v; incSel.appendChild(o);
-  });
-  // Expense sources
+  META.incomeSources.forEach(v => { const o=document.createElement('option'); o.value=o.textContent=v; incSel.appendChild(o); });
   const expSel = document.getElementById('exp-source');
-  META.expenseSources.forEach(v => {
-    const o = document.createElement('option'); o.value = o.textContent = v; expSel.appendChild(o);
-  });
-  // Categories datalist
+  META.expenseSources.forEach(v => { const o=document.createElement('option'); o.value=o.textContent=v; expSel.appendChild(o); });
   const dl = document.getElementById('exp-categories');
-  META.defaultCategories.forEach(v => {
-    const o = document.createElement('option'); o.value = v; dl.appendChild(o);
-  });
+  META.defaultCategories.forEach(v => { const o=document.createElement('option'); o.value=v; dl.appendChild(o); });
 
-  // Year options: current year ± 4
   const ySel = document.getElementById('filter-year');
-  const now = new Date();
-  const curY = now.getFullYear();
+  const now = new Date(); const curY = now.getFullYear();
   for (let y = curY + 1; y >= curY - 4; y--) {
     const o = document.createElement('option');
     o.value = String(y); o.textContent = y; if (y === curY) o.selected = true;
@@ -261,158 +396,125 @@ function initUI() {
 }
 initUI();
 
-// Validations
-function parseAmount(el) {
-  const v = Number(el.value);
-  if (!isFinite(v) || v <= 0) return null;
-  return +v.toFixed(2);
-}
+function parseAmount(el){ const v = Number(el.value); if(!isFinite(v) || v<=0) return null; return +v.toFixed(2); }
 
-// Submit Income
 document.getElementById('inc-submit').addEventListener('click', () => {
   const dateISO = document.getElementById('inc-date').value;
   const amount = parseAmount(document.getElementById('inc-amount'));
   const source = document.getElementById('inc-source').value;
   const remarks = document.getElementById('inc-remarks').value.trim();
-
-  if (!dateISO) return toast('Pick a date, time traveler.', false);
-  if (amount === null) return toast('Amount must be > 0.', false);
-  if (!source) return toast('Select a source.', false);
-
-  document.getElementById('inc-submit').disabled = true;
-  google.script.run.withSuccessHandler(() => {
+  if(!dateISO) return toast('Pick a date.', false);
+  if(amount===null) return toast('Amount must be > 0.', false);
+  if(!source) return toast('Select a source.', false);
+  const btn = document.getElementById('inc-submit'); btn.disabled = true;
+  google.script.run.withSuccessHandler(()=>{
     toast('Income saved.');
-    document.getElementById('inc-amount').value = '';
-    document.getElementById('inc-remarks').value = '';
-    document.getElementById('inc-submit').disabled = false;
-  }).withFailureHandler(err => {
-    toast(err.message || 'Failed to save income.', false);
-    document.getElementById('inc-submit').disabled = false;
-  }).addIncome({dateISO, amount, source, remarks});
+    document.getElementById('inc-amount').value='';
+    document.getElementById('inc-remarks').value='';
+    btn.disabled=false; refreshView();
+  }).withFailureHandler(err=>{ toast(err.message||'Failed.', false); btn.disabled=false; }).addIncome({dateISO, amount, source, remarks});
 });
 
-// Submit Expense
 document.getElementById('exp-submit').addEventListener('click', () => {
   const dateISO = document.getElementById('exp-date').value;
   const amount = parseAmount(document.getElementById('exp-amount'));
   const source = document.getElementById('exp-source').value;
   const category = document.getElementById('exp-category').value.trim();
   const remarks = document.getElementById('exp-remarks').value.trim();
-
-  if (!dateISO) return toast('Pick a date, oracle.', false);
-  if (amount === null) return toast('Amount must be > 0.', false);
-  if (!source) return toast('Select a source.', false);
-
-  document.getElementById('exp-submit').disabled = true;
-  google.script.run.withSuccessHandler(() => {
+  if(!dateISO) return toast('Pick a date.', false);
+  if(amount===null) return toast('Amount must be > 0.', false);
+  if(!source) return toast('Select a source.', false);
+  const btn = document.getElementById('exp-submit'); btn.disabled = true;
+  google.script.run.withSuccessHandler(()=>{
     toast('Expense saved.');
-    document.getElementById('exp-amount').value = '';
-    document.getElementById('exp-remarks').value = '';
-    // leave category sticky, because humans repeat themselves
-    document.getElementById('exp-submit').disabled = false;
-  }).withFailureHandler(err => {
-    toast(err.message || 'Failed to save expense.', false);
-    document.getElementById('exp-submit').disabled = false;
-  }).addExpense({dateISO, amount, source, category, remarks});
+    document.getElementById('exp-amount').value='';
+    document.getElementById('exp-remarks').value='';
+    btn.disabled=false; refreshView();
+  }).withFailureHandler(err=>{ toast(err.message||'Failed.', false); btn.disabled=false; }).addExpense({dateISO, amount, source, category, remarks});
 });
 
-// View tab logic
-const filterIds = ['filter-year','filter-month','filter-source','filter-category'];
+const filterIds = ['filter-year','filter-month','filter-source','filter-category','filter-start','filter-end'];
 filterIds.forEach(id => document.getElementById(id).addEventListener('change', refreshView));
 document.getElementById('refresh-view').addEventListener('click', refreshView);
 
-function getFilters() {
+function getFilters(){
   const year = Number(document.getElementById('filter-year').value) || null;
   const month = document.getElementById('filter-month').value ? Number(document.getElementById('filter-month').value) : null;
   const source = document.getElementById('filter-source').value || null;
   const category = document.getElementById('filter-category').value || null;
-  return { year, month, source, category };
+  const start = document.getElementById('filter-start').value || null;
+  const end = document.getElementById('filter-end').value || null;
+  return { year, month, source, category, start, end };
 }
 
-function refreshView() {
+function refreshView(){
   const filters = getFilters();
-  google.script.run.withSuccessHandler(renderView).withFailureHandler(err => {
-    toast(err.message || 'Failed to load logs.', false);
+  google.script.run.withSuccessHandler(renderView).withFailureHandler(err=>{
+    toast(err.message||'Failed to load.', false);
   }).fetchLogs(filters);
 }
 
-// initial view load after short delay to allow year dropdown populate
-setTimeout(refreshView, 300);
+setTimeout(refreshView, 200);
 
-// render
-function renderView({ok, rows, totals, sources, categories}) {
-  if (!ok) return;
-  document.getElementById('tot-income').textContent = (totals.income || 0).toFixed(2);
-  document.getElementById('tot-expense').textContent = (totals.expense || 0).toFixed(2);
-  document.getElementById('tot-net').textContent = (totals.net || 0).toFixed(2);
-
-  // Update filter choices for Source/Category
+function renderView({ok, rows, totals, sources, categories}){
+  if(!ok) return;
+  document.getElementById('tot-income').textContent = (totals.income||0).toFixed(2);
+  document.getElementById('tot-expense').textContent = (totals.expense||0).toFixed(2);
+  const netEl = document.getElementById('tot-net');
+  const netVal = (typeof totals.net === 'number' ? totals.net : ((totals.income||0)-(totals.expense||0)));
+  netEl.textContent = netVal.toFixed(2);
+  netEl.classList.remove('ok','danger');
+  if (netVal > 0) netEl.classList.add('ok');
+  else if (netVal < 0) netEl.classList.add('danger');
   const srcSel = document.getElementById('filter-source');
   const catSel = document.getElementById('filter-category');
   const keep = (sel, items) => {
     const cur = sel.value;
     sel.innerHTML = '<option value="">All</option>';
-    items.forEach(v => {
-      const o = document.createElement('option'); o.value = v; o.textContent = v; sel.appendChild(o);
-    });
+    items.forEach(v => { const o=document.createElement('option'); o.value=v; o.textContent=v; sel.appendChild(o); });
     if ([...sel.options].some(o => o.value === cur)) sel.value = cur;
   };
   keep(srcSel, sources);
   keep(catSel, categories);
 
-  // Active filter chips
   const chips = document.getElementById('active-filters');
   chips.innerHTML = '';
   const f = getFilters();
-  const addChip = (label, val) => {
-    if (!val) return;
-    const c = document.createElement('div'); c.className = 'chip'; c.textContent = label + ': ' + val; chips.appendChild(c);
-  };
+  const addChip = (label, val) => { if(!val) return; const c=document.createElement('div'); c.className='chip'; c.textContent = label+': '+val; chips.appendChild(c); };
   addChip('Year', f.year);
   addChip('Month', f.month);
   addChip('Source', f.source);
   addChip('Category', f.category);
 
-  // Rows
   const tbody = document.getElementById('log-body');
   tbody.innerHTML = '';
   rows.forEach(r => {
     const tr = document.createElement('tr');
     tr.innerHTML = `
-      <td>${r.type}</td>
-      <td>${r.dateISO}</td>
-      <td>${Number(r.amount).toFixed(2)}</td>
-      <td>${r.source || ''}</td>
-      <td>${r.category || ''}</td>
-      <td>${escapeHtml(r.remarks || '')}</td>
-      <td><button class="delete-btn" data-sheet="${r.sheetName}" data-row="${r.sheetRow}">Delete</button></td>
-    `;
+      <td data-col="Type">${r.type}</td>
+      <td data-col="Date">${r.dateISO}</td>
+      <td data-col="Amount">${Number(r.amount).toFixed(2)}</td>
+      <td data-col="Source">${r.source||''}</td>
+      <td data-col="Category">${r.category||''}</td>
+      <td data-col="Actions"><button class="delete-btn" data-sheet="${r.sheetName}" data-row="${r.sheetRow}">Delete</button></td>`;
     tbody.appendChild(tr);
   });
 
-  // hook deletes
   tbody.querySelectorAll('.delete-btn').forEach(btn => {
     btn.addEventListener('click', () => {
       const sheet = btn.getAttribute('data-sheet');
       const row = Number(btn.getAttribute('data-row'));
-      // Confirm summary
-      const summary = [...btn.closest('tr').children].slice(0,6).map(td => td.textContent.trim()).join(' | ');
-      if (!confirm(`Delete this entry?\n\n${summary}`)) return;
+      const summary = [...btn.closest('tr').children].slice(0,5).map(td=>td.textContent.trim()).join(' | ');
+      if(!confirm(`Delete this entry?\n\n${summary}`)) return;
       btn.disabled = true;
-      google.script.run.withSuccessHandler(() => {
-        toast('Deleted.');
-        refreshView();
-      }).withFailureHandler(err => {
-        toast(err.message || 'Delete failed.', false);
-        btn.disabled = false;
-      }).deleteEntry(sheet, row);
+      google.script.run.withSuccessHandler(()=>{ toast('Deleted.'); refreshView(); })
+        .withFailureHandler(err=>{ toast(err.message||'Delete failed.', false); btn.disabled=false; })
+        .deleteEntry(sheet, row);
     });
   });
 }
 
-function escapeHtml(s) {
-  return s.replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));
-}
+function escapeHtml(s){ return s.replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#039;'}[m])); }
 </script>
 </body>
 </html>
