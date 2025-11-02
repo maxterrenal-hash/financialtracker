@@ -3,11 +3,12 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Expense & Income Tracker</title>
+  <title>Expense & Income Tracker — Dark</title>
   <style>
     html{overflow-x:hidden;}
     body {box-sizing:border-box;margin:0;padding:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;background:#1c1c1e;color:#f2f2f7;display:flex;flex-direction:column;height:100vh;overflow-x:hidden;}
-    header { color:#0a84ff;padding:16px;font-size:24px;font-weight:600;text-align:center;position:sticky;top:0;z-index:100;background:rgba(28,28,30,0.75);backdrop-filter:blur(12px);border-bottom:1px solid rgba(255,255,255,0.08);}
+    header { color:#0a84ff;padding:16px;font-size:24px;font-weight:600;text-align:center;position:sticky;top:0;z-index:100;background:rgba(28,28,30,0.75);backdrop-filter:blur(12px);border-bottom:1px solid rgba(255,255,255,0.08);}    
+
     .segmented {display:flex;margin:8px auto;background:transparent;border-radius:20px;gap:8px;max-width:600px;width:calc(100% - 32px);position:relative;}
     .segmented button {flex:1;padding:10px 0;border:none;background:#3a3a3c;font-size:16px;font-weight:500;color:#f2f2f7;border-radius:20px;transition:background 0.25s,color 0.25s;}
     .segmented button.active {background:#0a84ff;color:#fff;box-shadow:0 2px 4px rgba(0,0,0,0.4);} 
@@ -15,38 +16,51 @@
 
     form {background:#2c2c2e;margin:12px auto;padding:20px 16px;border-radius:12px;box-shadow:0 1px 3px rgba(0,0,0,0.4);max-width:600px;width:100%;box-sizing:border-box;} 
     .form-group {margin-bottom:16px;} 
-    label {font-size:14px;color:#6e6e73;display:block;margin-bottom:4px;} 
+    label {font-size:14px;color:#9a9aa0;display:block;margin-bottom:4px;} 
     input, select {width:100%;padding:10px 12px;font-size:16px;border:1px solid #444;border-radius:6px;background:#3a3a3c;color:#f2f2f7;box-sizing:border-box;max-width:100%;} 
     button.submit {width:100%;padding:12px;background:#007aff;color:#fff;font-size:16px;border:none;border-radius:8px;margin-top:12px;} 
 
-    #statusBar {display:none;margin:0 16px 8px; font-size:12px; color:#6e6e73}
+    #statusBar {display:none;margin:0 16px 8px; font-size:12px; color:#9a9aa0}
     #formContainer {flex:1}
     #viewContainer {flex:1;overflow:auto;margin:16px;display:none;} 
 
     .entry {background:#2c2c2e;padding:12px 16px;margin-bottom:8px;border-radius:8px;display:flex;justify-content:space-between;align-items:center;box-shadow:0 1px 2px rgba(0,0,0,0.5);position:relative;overflow:hidden;touch-action:pan-y;} 
     .entry .info {display:flex;flex-direction:row;justify-content:space-between;width:100%;gap:8px;} 
-    .entry .info .date {flex:1;font-size:12px;color:#6e6e73;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;} 
+    .entry .info .date {flex:1;font-size:12px;color:#9a9aa0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;} 
     .entry .info .amount {flex:1;font-size:16px;font-weight:600;text-align:center;white-space:nowrap;} 
     .entry .info .meta {flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:right;} 
     .entry .deleteBtn {position:absolute;right:-60px;top:0;height:100%;width:60px;background:#ff3b30;color:#fff;border:none;border-radius:0 8px 8px 0;transition:right 0.25s;padding:0;display:flex;align-items:center;justify-content:center;} 
 
-    .totals {background:#2c2c2e;margin:16px;padding:12px;border-radius:8px;box-shadow:0 1px 2px rgba(0,0,0,0.5);} 
+    .totals {background:#2c2c2e;margin:16px;padding:12px;border-radius:12px;box-shadow:0 1px 2px rgba(0,0,0,0.5);display:flex;justify-content:space-between;align-items:center;font-size:15px;font-weight:500;}
+    .totals .label {color:#9a9aa0;font-size:13px;}
     .totals .value {font-weight:600;}
+    .totals .divider {width:1px;height:28px;background:#3a3a3c;margin:0 12px;}
 
     /* iOS-style date display field */
     #dateDisplay{padding:12px 14px;border:1px solid #444;border-radius:10px;background:#3a3a3c;font-size:16px;color:#f2f2f7;cursor:pointer;}
     input[type=date]{max-width:100%;}
     input[type=number]{max-width:100%;}
 
-    /* Date modal (custom picker to avoid showPicker security errors) */
-    #dateModal{position:fixed;inset:0;background:rgba(0,0,0,0.35);display:none;align-items:center;justify-content:center;z-index:9998;}
-    #dateModal .sheet{background:#fff;width:88%;max-width:360px;border-radius:16px;overflow:hidden;box-shadow:0 10px 28px rgba(0,0,0,0.25), 0 2px 8px rgba(0,0,0,0.12);} 
+    /* Date modal — DARK */
+    #dateModal{position:fixed;inset:0;background:rgba(0,0,0,0.5);display:none;align-items:center;justify-content:center;z-index:9998;}
+    #dateModal .sheet{background:#1c1c1e;width:88%;max-width:360px;border-radius:16px;overflow:hidden;box-shadow:0 10px 28px rgba(0,0,0,0.6), 0 2px 8px rgba(0,0,0,0.4);border:1px solid #2a2a2b;} 
     #dateModal .body{padding:16px 16px 0;}
     #dateModal .row{display:flex;gap:8px;margin-bottom:16px;}
-    #dateModal select{flex:1;padding:10px 12px;font-size:16px;border:1px solid #d1d1d6;border-radius:10px;background:#fff;}
-    #dateModal .actions{display:flex;border-top:1px solid #d1d1d6;}
-    #dateCancel, #dateOk{flex:1;padding:14px;border:none;background:#fff;font-size:16px;color:#007aff;}
+    #dateModal select{flex:1;padding:10px 12px;font-size:16px;border:1px solid #444;border-radius:10px;background:#2c2c2e;color:#f2f2f7;}
+    #dateModal .actions{display:flex;border-top:1px solid #2a2a2b;}
+    #dateCancel, #dateOk{flex:1;padding:14px;border:none;background:#1c1c1e;font-size:16px;color:#0a84ff;}
     #dateOk{font-weight:600;}
+
+    /* iOS-style confirm modal — DARK */
+    #iosModal{position:fixed;inset:0;background:rgba(0,0,0,0.55);backdrop-filter:blur(8px);display:none;align-items:center;justify-content:center;z-index:9999;}
+    #iosModal .card{background:#1c1c1e;width:85%;max-width:320px;border-radius:18px;overflow:hidden;font-size:16px;box-shadow:0 10px 28px rgba(0,0,0,0.6), 0 2px 8px rgba(0,0,0,0.4);border:1px solid #2a2a2b;}
+    #iosModalText{padding:20px;text-align:center;white-space:pre-line;color:#f2f2f7;}
+    #iosModal .row{display:flex;border-top:1px solid #2a2a2b;}
+    #iosCancel, #iosConfirm{flex:1;padding:14px;border:none;background:#1c1c1e;font-size:16px;color:#0a84ff;}
+    #iosConfirm{font-weight:600;}
+
+    /* View tab filter controls should inherit dark inputs */
+    #viewContainer .form-group select{background:#3a3a3c;color:#f2f2f7;border:1px solid #444;}
   </style>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script>
@@ -92,38 +106,37 @@
     <div style="flex:1;"><label>Month</label><select id="monthFilter"><option value="all">All</option><option value="01">January</option><option value="02">February</option><option value="03">March</option><option value="04">April</option><option value="05">May</option><option value="06">June</option><option value="07">July</option><option value="08">August</option><option value="09">September</option><option value="10">October</option><option value="11">November</option><option value="12">December</option></select></div>
     <div style="flex:1;"><label>Year</label><select id="yearFilter"></select></div>
   </div>
-  <div class="totals" style="display:flex;justify-content:space-between;align-items:center;padding:16px 12px;margin:16px;border-radius:12px;background:#fff;box-shadow:0 1px 2px rgba(0,0,0,0.05);font-size:15px;font-weight:500;">
+  <div class="totals">
     <div style="text-align:center;flex:1;">
-      <div style="color:#6e6e73;font-size:13px;">Income</div>
-      <div id="totalIncome" style="font-size:18px;font-weight:600;">0</div>
+      <div class="label">Income</div>
+      <div id="totalIncome" class="value" style="font-size:18px;">0</div>
     </div>
-    <div style="width:1px;height:28px;background:#d1d1d6;margin:0 12px;"></div>
+    <div class="divider"></div>
     <div style="text-align:center;flex:1;">
-      <div style="color:#6e6e73;font-size:13px;">Expense</div>
-      <div id="totalExpense" style="font-size:18px;font-weight:600;">0</div>
+      <div class="label">Expense</div>
+      <div id="totalExpense" class="value" style="font-size:18px;">0</div>
     </div>
   </div>
   <div style="margin-top:16px;">
     <canvas id="expensePie" height="200"></canvas>
-    
   </div>
   <div id="entriesList" style="margin-top:16px;"></div>
   <div id="methodsSummary" style="display:none;"></div>
 </div>
 
-<!-- iOS-style confirm modal -->
-<div id="iosModal" style="position:fixed;inset:0;background:rgba(0,0,0,0.45);backdrop-filter:blur(8px);display:none;align-items:center;justify-content:center;z-index:9999;">
-  <div style="background:#fff;width:85%;max-width:320px;border-radius:18px;overflow:hidden;font-size:16px;box-shadow:0 10px 28px rgba(0,0,0,0.25), 0 2px 8px rgba(0,0,0,0.12);">
-    <div id="iosModalText" style="padding:20px;text-align:center;white-space:pre-line;"></div>
-    <div style="display:flex;border-top:1px solid #d1d1d6;">
-      <button id="iosCancel" style="flex:1;padding:14px;border:none;background:#fff;font-size:16px;color:#007aff;">Cancel</button>
-      <div style="width:1px;background:#d1d1d6;"></div>
-      <button id="iosConfirm" style="flex:1;padding:14px;border:none;background:#fff;font-size:16px;font-weight:600;color:#007aff;">Confirm</button>
+<!-- iOS-style confirm modal (dark) -->
+<div id="iosModal">
+  <div class="card">
+    <div id="iosModalText"></div>
+    <div class="row">
+      <button id="iosCancel">Cancel</button>
+      <div style="width:1px;background:#2a2a2b;"></div>
+      <button id="iosConfirm">Confirm</button>
     </div>
   </div>
 </div>
 
-<!-- Custom Date Picker Modal (to avoid showPicker security error) -->
+<!-- Custom Date Picker Modal (dark) -->
 <div id="dateModal">
   <div class="sheet">
     <div class="body">
@@ -191,21 +204,15 @@ function isPlainNumberStr(s){ return typeof s==='string' && /^\d+(?:\.\d+)?$/.te
 function isIsoDateStr(s){ return typeof s==='string' && /^\d{4}-\d{2}-\d{2}/.test(s); }
 
 function shapeExpenseRow(r, i){
-  // Try to detect common shapes robustly
-  var rowIndex = (typeof r[0]==='number' && !isNaN(r[0])) ? r[0] : i; // prefer backend index if present
-  // candidate fields
+  var rowIndex = (typeof r[0]==='number' && !isNaN(r[0])) ? r[0] : i;
   var date, amount, method, cat;
-  // scan for date
   for(var k=0;k<r.length;k++){ if(isIsoDateStr(String(r[k]))){ date = normalizeDateString(String(r[k])); break; } }
-  // scan for amount: numeric token not containing '-'
   for(var k=0;k<r.length;k++){
     var v = r[k];
     if(typeof v==='number'){ amount = v; break; }
     if(isPlainNumberStr(String(v))){ amount = parseFloat(v); break; }
   }
-  // method from known list
   for(var k=0;k<r.length;k++){ if(expenseMethods.indexOf(String(r[k]))>-1){ method = String(r[k]); break; } }
-  // category from known list
   for(var k=0;k<r.length;k++){ if(categories.indexOf(String(r[k]))>-1){ cat = String(r[k]); break; } }
   return { idx: rowIndex, date: date||'', amount: amount||0, method: method||'', category: cat||'' };
 }
@@ -413,7 +420,7 @@ function render(exp, inc) {
   // Expenses
   exp.forEach(function(r){
     var e = document.createElement("div"); e.className = "entry";
-    e.innerHTML = '\n      <div class="info">\n        <div class="date">'+(r.date||'')+' (Expense)</div>\n        <div class="amount">-₱'+(Number(r.amount).toFixed(2))+'</div>\n        <div class="meta">'+(r.method||'')+' · '+(r.category||'')+'</div>\n      </div>\n      <button class="deleteBtn" data-sheet="Expenses" data-row="'+(r.idx+2)+'">🗑</button>';
+    e.innerHTML = '\n      <div class="info">\n        <div class="date>'+(r.date||'')+' (Expense)</div>\n        <div class="amount">-₱'+(Number(r.amount).toFixed(2))+'</div>\n        <div class="meta">'+(r.method||'')+' · '+(r.category||'')+'</div>\n      </div>\n      <button class="deleteBtn" data-sheet="Expenses" data-row="'+(r.idx+2)+'">🗑</button>';
     entriesList.appendChild(e);
   });
   // Income
@@ -504,42 +511,7 @@ function sum(exp, inc) {
       plugins: { legend: { display: false } }
     }
   });
-  // income bar chart removed
-  var assertEq=function(name,a,b){log(name+': '+a+' '+(a===b?'==':'!=')+' '+b);};
-
-  // date normalize
-  assertEq('normalize string', normalizeDateString('2025-11-02'), '2025-11-02');
-  assertEq('normalize Date', normalizeDateString(new Date('2025-11-02')).slice(0,10), '2025-11-02');
-  // filter math (objects)
-  var exp=[
-    {idx:0,date:'2025-11-01',amount:100,method:'Cash',category:'Grocery'},
-    {idx:1,date:'2025-10-15',amount:50,method:'Gcash',category:'Gas'},
-    {idx:2,date:'2025-11-10',amount:25,method:'Cash',category:'Personal'}
-  ];
-  var inc=[
-    {idx:0,date:'2025-11-03',amount:500,source:'WCC'},
-    {idx:1,date:'2025-10-20',amount:200,source:'Others'}
-  ];
-  var nov='11';
-  var fexp=exp.filter(function(r){return normalizeDateString(r.date).split('-')[1]===nov;});
-  var finc=inc.filter(function(r){return normalizeDateString(r.date).split('-')[1]===nov;});
-  var tExp=fexp.reduce(function(s,r){return s+(+r.amount||0);},0);
-  var tInc=finc.reduce(function(s,r){return s+(+r.amount||0);},0);
-  assertEq('nov expense total', tExp, 125);
-  assertEq('nov income total', tInc, 500);
-  var mt={}; fexp.forEach(function(r){mt[r.method]=(mt[r.method]||0)+(+r.amount||0);});
-  assertEq('method Cash', mt['Cash'], 125);
-
-  // new tests: shapers cope with weird column order
-  var raw1=['2025-11-02','Cash','Grocery','123.45'];
-  var raw2=[5,'2025-11-05','WCC','999.99'];
-  var e1=shapeExpenseRow(raw1, 0); var i1=shapeIncomeRow(raw2, 1);
-  assertEq('shapeExpenseRow.amount', Number(e1.amount).toFixed(2), '123.45');
-  assertEq('shapeIncomeRow.amount', Number(i1.amount).toFixed(2), '999.99');
-
-  console.log(logs.join('\n'));
 }
-// runTests() // uncomment to run manually
 
 // ====== INIT ======
 try { dateInput.valueAsDate = new Date(); } catch(e) { dateInput.value = normalizeDateString(new Date()); }
