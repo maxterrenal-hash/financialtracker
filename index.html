@@ -280,15 +280,21 @@ function robustPost(payload) {
     });
 }
 
+function readJsonOrText(resp){
+  return resp.text().then(function(txt){
+    try { return JSON.parse(txt); } catch(e) { return { ok:false, raw: txt }; }
+  });
+}
+
 function robustGet() {
   const url = WEBAPP_URL + '?nocache=' + Date.now();
   document.getElementById('statusBar').style.display='block';
   lastError.textContent = 'loading…';
   return fetch(url)
-    .then(async function(r){
-      const data = await readJsonOrText(r);
+    .then(function(r){ return readJsonOrText(r); })
+    .then(function(data){
       console.log('[GET]', data);
-      if(!r.ok || data.ok===false){ throw new Error((data && (data.error||data.raw)) || ('HTTP '+r.status)); }
+      if(!data || data.ok===false){ throw new Error((data && (data.error||data.raw)) || 'GET failed'); }
       backendStatus.textContent='ok'; backendStatus.className='ok'; lastError.textContent = '—';
       return data;
     })
