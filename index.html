@@ -286,6 +286,12 @@
 // ==== Option B client: GitHub Pages frontend + Apps Script JSON/JSONP API ====
 // Set your deployed Web App URL here (execute as Me; anyone with link)
 const API_BASE = 'https://script.google.com/macros/s/AKfycbzCRBUKowiySmCgu8V1y5cpXSj_S9MHJAwuYflVoQjGn0uniPXqw0b2Sl80a2WwlCqG/exec';
+// Fallback meta in case getmeta fails or returns empty
+const FALLBACK_META = {
+  incomeSources: ['Gcash','WCC','TMC-SL','Manila Med','Others'],
+  expenseSources: ['Cash','Gcash','BPI CC','SB CB','SB RC','UnionBank'],
+  defaultCategories: ['Duty Food','House Food','Kids','Personal','Utilities','Subscription','Media','Gas','Car','Grocery','Insurance','Clothing','Loan','Travel','Others']
+};
 
 // --- JSONP GET (readable cross-origin on GH Pages) ---
 function jsonp(params, cbName){
@@ -331,13 +337,11 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
 
 // --- Meta & UI init ---
 let META = { incomeSources: [], expenseSources: [], defaultCategories: [] };
-window.handleMeta = ({todayISO, incomeSources, expenseSources, defaultCategories}) => {
-  META.incomeSources = incomeSources || [];
-  META.expenseSources = expenseSources || [];
-  META.defaultCategories = defaultCategories || [];
-  // Dates default to server local ISO today
-  document.getElementById('inc-date').value = todayISO;
-  document.getElementById('exp-date').value = todayISO;
+function populateFromMeta(meta){
+  const m = meta || FALLBACK_META;
+  META.incomeSources = (m.incomeSources && m.incomeSources.length ? m.incomeSources : FALLBACK_META.incomeSources);
+  META.expenseSources = (m.expenseSources && m.expenseSources.length ? m.expenseSources : FALLBACK_META.expenseSources);
+  META.defaultCategories = (m.defaultCategories && m.defaultCategories.length ? m.defaultCategories : FALLBACK_META.defaultCategories);
   // Populate selects
   const incSel = document.getElementById('inc-source'); incSel.innerHTML = '';
   META.incomeSources.forEach(v=>{ const o=document.createElement('option'); o.value=o.textContent=v; incSel.appendChild(o); });
@@ -345,13 +349,23 @@ window.handleMeta = ({todayISO, incomeSources, expenseSources, defaultCategories
   META.expenseSources.forEach(v=>{ const o=document.createElement('option'); o.value=o.textContent=v; expSel.appendChild(o); });
   const dl = document.getElementById('exp-categories'); dl.innerHTML='';
   META.defaultCategories.forEach(v=>{ const o=document.createElement('option'); o.value=v; dl.appendChild(o); });
+}
+window.handleMeta = ({todayISO, incomeSources, expenseSources, defaultCategories}) => {
+  // Dates default to server local ISO today if provided
+  if (todayISO) {
+    document.getElementById('inc-date').value = todayISO;
+    document.getElementById('exp-date').value = todayISO;
+  }
+  populateFromMeta({incomeSources, expenseSources, defaultCategories});
 };
 function initUI(){
   // Year filter (current ±4)
   const ySel = document.getElementById('filter-year');
   const now = new Date(); const curY = now.getFullYear(); ySel.innerHTML='';
   for(let y = curY + 1; y >= curY - 4; y--){ const o=document.createElement('option'); o.value=String(y); o.textContent=y; if(y===curY) o.selected=true; ySel.appendChild(o); }
-  // Load meta via JSONP
+  // Immediately populate with fallback so UI isn't empty
+  populateFromMeta(FALLBACK_META);
+  // Then try to load real meta via JSONP
   jsonp({action:'getmeta'}, 'handleMeta');
 }
 initUI();
