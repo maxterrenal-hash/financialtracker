@@ -12,8 +12,8 @@
     --panel-2: #141a22;
     --text: #e6edf3;
     --muted: #aab6c3;
-    --accent: #7c3aed; /* closer to the HHA violet accent */
-    --accent-2: #22d3ee; /* cyan for highlights */
+    --accent: #7c3aed;
+    --accent-2: #22d3ee;
     --danger: #ef4444;
     --ok: #22c55e;
     --input: #0f1720;
@@ -22,30 +22,31 @@
     --row-alt: #0f141b;
     --focus: #7c3aed;
   }
-  html, body { margin:0; padding:0; background:var(--bg); color:var(--text); font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Inter, Arial; }
-  * { -webkit-tap-highlight-color: transparent; }
+  html, body { margin:0; padding:0; background:var(--bg); color:var(--text); font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Inter, Arial; overflow-x:hidden; }
+  * { -webkit-tap-highlight-color: transparent; box-sizing: border-box; }
   .wrap { width: 100%; max-width: 520px; margin: 0 auto; padding: 12px 14px 80px; }
   h1 { font-size: 1.25rem; margin: 0 0 10px; font-weight: 800; letter-spacing: 0.2px; }
 
-  /* Tabs mimic HHA pills and stick to top on mobile */
+  /* Tabs */
   .tabs { position: sticky; top: 0; z-index: 50; display:flex; gap:8px; margin:0 0 12px; padding: 8px 0; background: linear-gradient(180deg, rgba(11,15,20,.95), rgba(11,15,20,.8)); backdrop-filter: blur(6px); }
   .tab-btn { flex:1; text-align:center; background:var(--panel); border:1px solid var(--border); color:var(--text); padding:12px 10px; border-radius:999px; cursor:pointer; font-weight:700; font-size: 0.95rem; min-width:0; }
   .tab-btn.active { background: var(--accent); border-color: var(--accent); }
 
   /* Cards */
-  .card { background: linear-gradient(180deg, var(--panel), var(--panel-2)); border:1px solid var(--border); border-radius:16px; padding:14px; margin-bottom:12px; box-shadow: 0 0 0 1px rgba(255,255,255,.02) inset; }
+  .card { background: linear-gradient(180deg, var(--panel), var(--panel-2)); border:1px solid var(--border); border-radius:16px; padding:14px; margin-bottom:12px; box-shadow: 0 0 0 1px rgba(255,255,255,.02) inset; overflow-x:hidden; }
 
-  /* Mobile-first form grid */
+  /* Grid */
   .row { display:grid; grid-template-columns: 1fr; gap:10px; margin-bottom:10px; }
   @media (min-width: 480px){ .row { grid-template-columns: repeat(12, 1fr); } .col-3 { grid-column: span 3; } .col-4 { grid-column: span 4; } .col-6 { grid-column: span 6; } .col-8 { grid-column: span 8; } .col-12 { grid-column: span 12; } }
   label { display:block; font-size:.85rem; margin-bottom:6px; color:var(--muted); font-weight:600; }
 
-  input[type="date"], input[type="number"], input[type="text"], select, datalist {
+  input[type="date"], input[type="number"], input[type="text"], select {
     width:100%; background:var(--input); color:var(--text); border:1px solid var(--border); border-radius:12px;
-    padding:14px 12px; outline:none; font-size:16px; line-height:1.2; /* prevent iOS zoom */
-    -webkit-appearance: none; appearance: none; height: 44px; box-sizing: border-box;
+    padding:14px 12px; outline:none; font-size:16px; line-height:1.2; height: 44px; 
+    -webkit-appearance: none; appearance: none;
   }
   input:focus, select:focus { border-color: var(--focus); box-shadow: 0 0 0 3px rgba(124,58,237,.25); }
+  input[type=date]::-webkit-calendar-picker-indicator{ filter: invert(1) opacity(.8); }
 
   .btn { width:100%; background:var(--accent); border:1px solid var(--accent); color:white; padding:14px 16px; border-radius:12px; cursor:pointer; font-weight:800; font-size:1rem; letter-spacing:.2px; }
   .btn.secondary { width:auto; background: transparent; border:1px solid var(--border); padding:12px 14px; border-radius:12px; font-weight:700; }
@@ -54,17 +55,26 @@
   .chips { display:flex; gap:8px; flex-wrap:wrap; }
   .chip { background:var(--chip); border:1px solid var(--border); border-radius:999px; padding:6px 10px; font-size:.8rem; color:var(--muted); }
 
-  .totals { display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
-  .total { background:var(--panel); border:1px solid var(--border); border-radius:12px; padding:8px 10px; font-weight:700; }
-  .danger { color: var(--danger); }
-  .ok { color: var(--ok); }
+  /* Totals */
+  .totals.stats { display:grid; grid-template-columns: repeat(3, 1fr); gap:8px; align-items:stretch; }
+  .total.stat { text-align:center; padding:12px; border-radius:14px; border:1px solid var(--border); background: linear-gradient(180deg, var(--panel), var(--panel-2)); min-width:0; }
+  .total.stat strong { display:block; font-size:.78rem; color:var(--muted); font-weight:800; letter-spacing:.2px; margin-bottom:4px; }
+  .total.stat span { display:block; font-size:1.25rem; font-weight:900; }
+  .total.stat.ok span { color: var(--ok); }
+  .total.stat.danger span { color: var(--danger); }
+  .total.stat.neutral span { color: var(--text); }
 
-  /* Table becomes card list on small screens */
+  /* Table */
   table { width:100%; border-collapse: collapse; margin-top:8px; table-layout: fixed; }
   th, td { text-align:left; padding:10px 8px; border-bottom:1px solid var(--border); word-break: break-word; overflow-wrap: anywhere; hyphens: auto; }
-  thead th { font-size:.8rem; color:var(--muted); }
+  thead th { font-size:.8rem; color:var(--muted); text-transform: uppercase; letter-spacing:.04em; }
   tbody tr:nth-child(even) { background: var(--row-alt); }
+  .log-table tbody tr { transition: background .15s ease, transform .05s ease; }
+  .log-table tbody tr:hover { background: rgba(124,58,237,.08); }
+  .delete-btn { background: transparent; color: var(--danger); border:1px solid var(--danger); padding:8px 12px; border-radius:999px; cursor:pointer; font-weight:800; }
+  .delete-btn:hover { background: rgba(239,68,68,.1); }
 
+  /* Responsive rows */
   @media (max-width: 640px){
     thead { display:none; }
     table, tbody, tr, td { display:block; width:100%; }
@@ -77,66 +87,18 @@
   .toast { position:fixed; right:12px; bottom:12px; background:var(--panel); border:1px solid var(--border); color:var(--text); padding:10px 14px; border-radius:12px; opacity:0; transform: translateY(10px); transition: all .2s ease; pointer-events:none; }
   .toast.show { opacity:1; transform: translateY(0); }
 
-  /* Sticky bottom action for mobile submit forms like HHA */
+  /* Sticky bottom action */
   .sticky-actions { position: sticky; bottom: 0; padding-top: 8px; background: linear-gradient(180deg, transparent, rgba(11,15,20,.9)); }
-  .table-controls { display:grid; grid-template-columns: 1fr 1fr; gap:8px; width:100%; }
+
+  /* Table controls */
+  .table-controls { display:grid; grid-template-columns: 1fr 1fr; gap:8px; width:100%; max-width:100%; }
   .table-controls .date-inline label { display:block; font-size:.78rem; color:var(--muted); margin-bottom:4px; font-weight:700; line-height:1.1; }
   .table-controls input[type="date"] { width:100%; background:var(--input); color:var(--text); border:1px solid var(--border); border-radius:10px; padding:10px 12px; font-size:16px; height: 40px; line-height:1.2; -webkit-appearance:none; appearance:none; }
   @media (max-width: 420px){ .table-controls { grid-template-columns: 1fr; } }
-  /* Ensure long text wraps inside table borders */
-  td[data-col="Category"], td[data-col="Remarks"],
-  tbody td:nth-child(5), tbody td:nth-child(6) { white-space: normal; }
-  /* Constrain last column actions so it doesn't push layout */
-  td[data-col="Actions"] { white-space: nowrap; }
-  /* Keep inputs from exceeding their containers */
-  *, *::before, *::after { box-sizing: border-box; }
-  input, select, textarea { max-width: 100%; }
-  #inc-remarks, #exp-remarks { display:block; width:100%; max-width:100%; }
-  .wrap { overflow-x: hidden; }
-  /* (combobox removed; Category now a select) */ 
-/* Make the calendar icon visible on dark and keep layout */
-input[type=date]::-webkit-calendar-picker-indicator{ filter: invert(1) opacity(.8); }
-  /* Stats bar: 3 consistent cards (Income, Expenses, Net) */
-  .totals.stats { display:grid; grid-template-columns: repeat(3, 1fr); gap:8px; align-items:stretch; }
-  
-  .total.stat { text-align:center; padding:12px; border-radius:14px; border:1px solid var(--border); background: linear-gradient(180deg, var(--panel), var(--panel-2)); min-width:0; }
-  .total.stat strong { display:block; font-size:.78rem; color:var(--muted); font-weight:800; letter-spacing:.2px; margin-bottom:4px; }
-  .total.stat span { display:block; font-size:1.25rem; font-weight:900; }
-  .total.stat.ok span { color: var(--ok); }
-  .total.stat.danger span { color: var(--danger); }
-  .total.stat.neutral span { color: var(--text); }
-  
-  .totals .spacer { display:none !important; }
-  .totals #refresh-view { grid-column: 1 / -1; justify-self: end; }
-  /* Log table polish for consistency */
-  .log-table thead th { text-transform: uppercase; letter-spacing:.04em; }
-  .log-table tbody tr { transition: background .15s ease, transform .05s ease; }
-  .log-table tbody tr:hover { background: rgba(124,58,237,.08); }
-  .delete-btn { background: transparent; color: var(--danger); border:1px solid var(--danger); padding:8px 12px; border-radius:999px; cursor:pointer; font-weight:800; }
-  .delete-btn:hover { background: rgba(239,68,68,.1); }
-  /* Tiny screens: keep 3 stats in a row but breathe with smaller type/padding */
-  @media (max-width: 400px){
-    .totals.stats { grid-template-columns: repeat(3, 1fr); }
-    .total.stat { padding: 8px; }
-    .total.stat strong { font-size: .72rem; }
-    .total.stat span { font-size: 1.05rem; }
-  }
-  @media (max-width: 340px){
-    .total.stat { padding: 6px; }
-    .total.stat strong { font-size: .68rem; }
-    .total.stat span { font-size: .98rem; }
-  }
-  /* Mobile hardening: prevent horizontal scroll and allow stat cards/buttons to shrink safely */
-  html, body { overflow-x: hidden; }
-  /* Mobile fix: keep log date pickers within table width */
-  .table-controls { max-width: 100%; }
-  .table-controls .date-inline { min-width: 0; }
-  .table-controls input[type="date"] { width:100%; max-width:100%; min-width:0; }
-  @media (max-width: 640px){ .table-controls { grid-template-columns: 1fr; } }
-  /* Extra safety: date pickers never overflow the card on mobile */
-  .card { overflow-x: hidden; }
-  .table-controls .date-inline { min-width:0; }
-  .log-table { width:100%; max-width:100%; overflow-x:hidden; }
+
+  /* Tiny screens: keep 3 stats readable */
+  @media (max-width: 400px){ .total.stat { padding: 8px; } .total.stat strong { font-size: .72rem; } .total.stat span { font-size: 1.05rem; } }
+  @media (max-width: 340px){ .total.stat { padding: 6px; } .total.stat strong { font-size: .68rem; } .total.stat span { font-size: .98rem; } }
 </style>
 </head>
 <body>
@@ -186,14 +148,13 @@ input[type=date]::-webkit-calendar-picker-indicator{ filter: invert(1) opacity(.
         <select id="exp-source"></select>
       </div>
     </div>
-    <!-- Category moved below the first row as full width -->
     <div class="row">
       <div class="col-12">
         <label for="exp-category">Category</label>
         <select id="exp-category"></select>
       </div>
       <div class="col-12">
-        <label for="exp-remarks">Remarks</label></label>
+        <label for="exp-remarks">Remarks</label>
         <input type="text" id="exp-remarks" placeholder="optional" />
       </div>
     </div>
@@ -236,6 +197,7 @@ input[type=date]::-webkit-calendar-picker-indicator{ filter: invert(1) opacity(.
     <div class="flex" style="justify-content:flex-end; margin-top:8px; gap:8px;">
       <button class="btn secondary" id="health-check">Health</button>
       <button class="btn secondary" id="write-test">Write Test</button>
+      <button class="btn secondary" id="ui-test">UI Test</button>
       <button class="btn secondary" id="refresh-view">Refresh</button>
     </div>
     <div class="card" style="margin-top:12px">
@@ -244,7 +206,6 @@ input[type=date]::-webkit-calendar-picker-indicator{ filter: invert(1) opacity(.
         <div class="spacer"></div>
         <div class="chips" id="active-filters"></div>
       </div>
-      <!-- Inline date range just for the table width -->
       <div class="table-controls" style="margin:8px 0 4px;">
         <div class="date-inline">
           <label for="filter-start">Start</label>
@@ -263,7 +224,6 @@ input[type=date]::-webkit-calendar-picker-indicator{ filter: invert(1) opacity(.
             <th>Amount</th>
             <th>Source</th>
             <th>Category</th>
-            
             <th></th>
           </tr>
         </thead>
@@ -289,8 +249,8 @@ const FALLBACK_META = {
 // --- JSONP helpers ---
 function jsonp(params, cbName){
   const url = new URL(API_BASE);
-  const q = Object.assign({}, params || {});
-  q._ts = Date.now(); // cache-bust to avoid stale JSONP
+  const q = Object.assign({}, params||{});
+  q._ts = Date.now(); // cache-bust
   Object.entries(q).forEach(([k,v])=>{ if(v!==undefined && v!==null && v!=='') url.searchParams.set(k, String(v)); });
   if (cbName) url.searchParams.set('callback', cbName);
   const s = document.createElement('script'); s.src = url.toString();
@@ -298,7 +258,6 @@ function jsonp(params, cbName){
   document.body.appendChild(s);
 }
 function jsonpWrite(action, params, cbName){ jsonp(Object.assign({action}, params||{}), cbName); }
-// JSONP with timeout guard so buttons don't stay disabled if backend doesn't answer
 function jsonpWithTimeout(action, params, cbName, onTimeout, ms){
   let done = false; const guard = setTimeout(()=>{ if(!done){ onTimeout && onTimeout(); } }, ms||7000);
   const wrapped = cbName + '_wrap_' + Math.random().toString(36).slice(2);
@@ -322,37 +281,25 @@ function goTab(key){
   document.getElementById('tab-'+key).style.display='';
   if (key === 'view') { refreshView(); }
 }
+
 document.querySelectorAll('.tab-btn').forEach(btn=>{ btn.addEventListener('click', ()=>{ goTab(btn.dataset.tab); }); });
 
-// --- Meta population (fix broken block) ---
+// --- Meta population ---
 let META = { incomeSources:[], expenseSources:[], defaultCategories:[] };
 function populateFromMeta(meta){
   const m = meta || FALLBACK_META;
-  // Merge meta with fallbacks
   META.incomeSources     = (m.incomeSources && m.incomeSources.length) ? m.incomeSources : FALLBACK_META.incomeSources;
   META.expenseSources    = (m.expenseSources && m.expenseSources.length) ? m.expenseSources : FALLBACK_META.expenseSources;
   META.defaultCategories = (m.defaultCategories && m.defaultCategories.length) ? m.defaultCategories : FALLBACK_META.defaultCategories;
 
-  // Populate Income Source select
   const incSel = document.getElementById('inc-source');
-  if (incSel){
-    incSel.innerHTML = '';
-    META.incomeSources.forEach(v=>{ const o=document.createElement('option'); o.value=o.textContent=v; incSel.appendChild(o); });
-  }
+  if (incSel){ incSel.innerHTML=''; META.incomeSources.forEach(v=>{ const o=document.createElement('option'); o.value=o.textContent=v; incSel.appendChild(o); }); }
 
-  // Populate Expense Source select
   const expSel = document.getElementById('exp-source');
-  if (expSel){
-    expSel.innerHTML = '';
-    META.expenseSources.forEach(v=>{ const o=document.createElement('option'); o.value=o.textContent=v; expSel.appendChild(o); });
-  }
+  if (expSel){ expSel.innerHTML=''; META.expenseSources.forEach(v=>{ const o=document.createElement('option'); o.value=o.textContent=v; expSel.appendChild(o); }); }
 
-  // Populate Category select
   const catSel = document.getElementById('exp-category');
-  if (catSel){
-    catSel.innerHTML = '';
-    META.defaultCategories.forEach(v=>{ const o=document.createElement('option'); o.value=o.textContent=v; catSel.appendChild(o); });
-  }
+  if (catSel){ catSel.innerHTML=''; META.defaultCategories.forEach(v=>{ const o=document.createElement('option'); o.value=o.textContent=v; catSel.appendChild(o); }); }
 }
 
 window.handleMeta = (d)=>{
@@ -362,13 +309,14 @@ window.handleMeta = (d)=>{
   }
   populateFromMeta(d);
 };
+
 function initUI(){
   // Year options (current ±4)
   const ySel = document.getElementById('filter-year');
   const now = new Date(), curY = now.getFullYear();
   ySel.innerHTML='';
   for(let y = curY+1; y >= curY-4; y--){ const o=document.createElement('option'); o.value=String(y); o.textContent=y; if(y===curY) o.selected=true; ySel.appendChild(o); }
-  // Fallback first, then real meta
+  // Preload UI with fallback then fetch real meta
   populateFromMeta(FALLBACK_META);
   jsonp({action:'getmeta'}, 'handleMeta');
 }
@@ -389,9 +337,11 @@ function getFilters(){
 
 // --- Render logs ---
 window.handleLogs = (payload)=>{
+  const btn = document.getElementById('refresh-view');
+  if (btn){ btn.disabled = false; btn.textContent = 'Refresh'; }
   if(!payload || !payload.ok){ toast('Failed to load logs', false); return; }
   const {rows, totals, sources, categories} = payload;
-  // Totals + net color
+
   document.getElementById('tot-income').textContent = (totals.income||0).toFixed(2);
   document.getElementById('tot-expense').textContent = (totals.expense||0).toFixed(2);
   const netEl = document.getElementById('tot-net');
@@ -400,18 +350,15 @@ window.handleLogs = (payload)=>{
   netEl.parentElement.classList.remove('ok','danger','neutral');
   netEl.parentElement.classList.add(netVal>0 ? 'ok' : (netVal<0 ? 'danger' : 'neutral'));
 
-  // Filter dropdowns preserve selection
   function keep(sel, items){ const cur = sel.value; sel.innerHTML = '<option value="">All</option>'; (items||[]).forEach(v=>{ const o=document.createElement('option'); o.value=v; o.textContent=v; sel.appendChild(o); }); if([...sel.options].some(o=>o.value===cur)) sel.value=cur; }
   keep(document.getElementById('filter-source'), sources);
   keep(document.getElementById('filter-category'), categories);
 
-  // Chips
   const chips = document.getElementById('active-filters'); chips.innerHTML='';
   const f = getFilters();
   const addChip = (label,val)=>{ if(!val) return; const c=document.createElement('div'); c.className='chip'; c.textContent=label+': '+val; chips.appendChild(c); };
   addChip('Year', f.year); addChip('Month', f.month); addChip('Source', f.source); addChip('Category', f.category);
 
-  // Rows
   const tbody = document.getElementById('log-body'); tbody.innerHTML='';
   (rows||[]).forEach(r=>{
     const tr = document.createElement('tr');
@@ -424,26 +371,31 @@ window.handleLogs = (payload)=>{
       <td data-col="Actions"><button class="delete-btn" data-sheet="${r.sheetName}" data-row="${r.sheetRow}">Delete</button></td>`;
     tbody.appendChild(tr);
   });
-  // Bind deletes
-  tbody.querySelectorAll('.delete-btn').forEach(btn=>{
-    btn.addEventListener('click', ()=>{
-      const sheetName = btn.getAttribute('data-sheet');
-      const sheetRow = btn.getAttribute('data-row');
-      const summary = [...btn.closest('tr').children].slice(0,5).map(td=>td.textContent.trim()).join(' | ');
-      if(!confirm(`Delete this entry?
+  toast(`Loaded ${rows?rows.length:0} row(s).`);
 
-${summary}`)) return;
-      btn.disabled = true;
-      window.handleDelete = (res)=>{ if(res && res.ok){ toast('Deleted.'); refreshView(); } else { toast('Delete failed', false); btn.disabled=false; } };
-      jsonpWithTimeout('delete', { sheetName, sheetRow }, 'handleDelete', ()=>{ btn.disabled=false; toast('Delete timed out', false); }, 7000);
+  tbody.querySelectorAll('.delete-btn').forEach(delBtn=>{
+    delBtn.addEventListener('click', ()=>{
+      const sheetName = delBtn.getAttribute('data-sheet');
+      const sheetRow = delBtn.getAttribute('data-row');
+      const summary = [...delBtn.closest('tr').children].slice(0,5).map(td=>td.textContent.trim()).join(' | ');
+      if(!confirm(`Delete this entry?\n\n${summary}`)) return;
+      delBtn.disabled = true;
+      window.handleDelete = (res)=>{ if(res && res.ok){ toast('Deleted.'); refreshView(); } else { toast('Delete failed', false); delBtn.disabled=false; } };
+      jsonpWithTimeout('delete', { sheetName, sheetRow }, 'handleDelete', ()=>{ delBtn.disabled=false; toast('Delete timed out', false); }, 7000);
     });
   });
 };
 
 function refreshView(){ jsonp(Object.assign({action:'fetchlogs'}, getFilters()), 'handleLogs'); }
+function refreshViewUI(){
+  const btn = document.getElementById('refresh-view');
+  if (btn){ const prev = btn.textContent; btn.textContent = 'Refreshing…'; btn.disabled = true; setTimeout(()=>{ btn.textContent = prev; btn.disabled = false; }, 4000); }
+  refreshView();
+}
 
 // --- Income submit ---
-document.getElementById('inc-submit').addEventListener('click', ()=>{
+const incSubmit = document.getElementById('inc-submit');
+incSubmit.addEventListener('click', ()=>{
   const dateISO = document.getElementById('inc-date').value;
   const amount = parseAmount(document.getElementById('inc-amount'));
   const source = document.getElementById('inc-source').value;
@@ -451,13 +403,14 @@ document.getElementById('inc-submit').addEventListener('click', ()=>{
   if(!dateISO) return toast('Pick a date.', false);
   if(amount===null) return toast('Amount must be > 0', false);
   if(!source) return toast('Select a source.', false);
-  const btn = document.getElementById('inc-submit'); btn.disabled = true;
-  window.handleWriteIncome = (res)=>{ btn.disabled=false; if(res && res.ok){ toast('Income saved.'); document.getElementById('inc-amount').value=''; document.getElementById('inc-remarks').value=''; goTab('view'); setTimeout(refreshView, 150); } else { toast('Save failed', false);} };
-  jsonpWithTimeout('addincome', { dateISO, amount, source, remarks }, 'handleWriteIncome', ()=>{ btn.disabled=false; toast('Income save timed out', false); }, 7000);
+  incSubmit.disabled = true;
+  window.handleWriteIncome = (res)=>{ incSubmit.disabled=false; if(res && res.ok){ toast('Income saved.'); document.getElementById('inc-amount').value=''; document.getElementById('inc-remarks').value=''; goTab('view'); setTimeout(refreshView, 150); } else { toast('Save failed', false);} };
+  jsonpWithTimeout('addincome', { dateISO, amount, source, remarks }, 'handleWriteIncome', ()=>{ incSubmit.disabled=false; toast('Income save timed out', false); }, 7000);
 });
 
 // --- Expense submit ---
-document.getElementById('exp-submit').addEventListener('click', ()=>{
+const expSubmit = document.getElementById('exp-submit');
+expSubmit.addEventListener('click', ()=>{
   const dateISO = document.getElementById('exp-date').value;
   const amount = parseAmount(document.getElementById('exp-amount'));
   const source = document.getElementById('exp-source').value;
@@ -466,16 +419,16 @@ document.getElementById('exp-submit').addEventListener('click', ()=>{
   if(!dateISO) return toast('Pick a date.', false);
   if(amount===null) return toast('Amount must be > 0', false);
   if(!source) return toast('Select a source.', false);
-  const btn = document.getElementById('exp-submit'); btn.disabled = true;
-  window.handleWriteExpense = (res)=>{ btn.disabled=false; if(res && res.ok){ toast('Expense saved.'); document.getElementById('exp-amount').value=''; document.getElementById('exp-remarks').value=''; goTab('view'); setTimeout(refreshView, 150); } else { toast('Save failed', false);} };
-  jsonpWithTimeout('addexpense', { dateISO, amount, source, category, remarks }, 'handleWriteExpense', ()=>{ btn.disabled=false; toast('Expense save timed out', false); }, 7000);
+  expSubmit.disabled = true;
+  window.handleWriteExpense = (res)=>{ expSubmit.disabled=false; if(res && res.ok){ toast('Expense saved.'); document.getElementById('exp-amount').value=''; document.getElementById('exp-remarks').value=''; goTab('view'); setTimeout(refreshView, 150); } else { toast('Save failed', false);} };
+  jsonpWithTimeout('addexpense', { dateISO, amount, source, category, remarks }, 'handleWriteExpense', ()=>{ expSubmit.disabled=false; toast('Expense save timed out', false); }, 7000);
 });
 
 // --- Filters & diagnostics ---
 ['filter-year','filter-month','filter-source','filter-category','filter-start','filter-end']
   .forEach(id=> document.getElementById(id).addEventListener('change', refreshView));
 
-document.getElementById('refresh-view').addEventListener('click', refreshView);
+document.getElementById('refresh-view').addEventListener('click', refreshViewUI);
 
 document.getElementById('health-check').addEventListener('click', ()=>{
   window.handleHealth = (d)=>{ if(d && d.ok){ toast(`Health OK • Income rows: ${d.incomeRows} • Expenses rows: ${d.expensesRows}`); } else { toast('Health failed', false);} };
@@ -485,6 +438,21 @@ document.getElementById('health-check').addEventListener('click', ()=>{
 document.getElementById('write-test').addEventListener('click', ()=>{
   window.handleAppendTest = (d)=>{ if(d && d.ok){ toast('Write test appended.'); refreshView(); } else { toast('Write test failed', false);} };
   jsonp({action:'appendtest'}, 'handleAppendTest');
+});
+
+// --- UI Test (no backend) ---
+document.getElementById('ui-test').addEventListener('click', ()=>{
+  const sample = {
+    ok:true,
+    totals:{ income: 1234.56, expense: 789.01, net: 445.55 },
+    sources:['Gcash','BPI CC','Cash'],
+    categories:['Grocery','Gas','Utilities','Kids'],
+    rows:[
+      { type:'Income', dateISO:'2025-11-03', amount:500.00, source:'Gcash', category:'', sheetName:'Income', sheetRow:2 },
+      { type:'Expense', dateISO:'2025-11-03', amount:120.25, source:'Cash', category:'Grocery', sheetName:'Expenses', sheetRow:2 }
+    ]
+  };
+  window.handleLogs(sample);
 });
 
 // Initial load
