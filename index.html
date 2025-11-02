@@ -61,6 +61,8 @@
 
     /* View tab filter controls should inherit dark inputs */
     #viewContainer .form-group select{background:#3a3a3c;color:#f2f2f7;border:1px solid #444;}
+    #backendBtn.mini{margin-left:8px;padding:4px 8px;font-size:12px;border:1px solid #444;background:#2c2c2e;color:#f2f2f7;border-radius:6px;}
+    #backendBtn.mini:hover{background:#3a3a3c;}
   </style>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script>
@@ -80,7 +82,7 @@
   <button id="btnExpense" class="active">Expense</button>
   <button id="btnView">View</button>
 </div>
-<div id="statusBar">Backend: <span id="backendStatus">unknown</span> · Last error: <span id="lastError">—</span></div>
+<div id="statusBar">Backend: <span id="backendStatus">unknown</span> · Host: <span id="backendHost">—</span> · Last error: <span id="lastError">—</span> <button id="backendBtn" class="mini">Set backend</button></div>
 
 <div id="formContainer">
   <form id="entryForm">
@@ -155,7 +157,8 @@
 
 <script>
 // ====== CONFIG ======
-var WEBAPP_URL = "https://script.google.com/macros/s/AKfycbze3tIAAebpW5r_nz7tMcL4dpdXURj4-1hgV4PNkKJi4-ZJItfXnBXrMUwPLO22dl3d/exec";
+var DEFAULT_WEBAPP_URL = "https://script.google.com/macros/s/AKfycbze3tIAAebpW5r_nz7tMcL4dpdXURj4-1hgV4PNkKJi4-ZJItfXnBXrMUwPLO22dl3d/exec";
+var WEBAPP_URL = localStorage.getItem('EXPENSE_WEBAPP_URL') || DEFAULT_WEBAPP_URL;
 var expenseMethods = ["Cash","Gcash","BPI Credit Card","Security Bank Cashback","Security Bank Rewards","BPI Rewards","UnionBank"];
 var incomeSources = ["Gcash","WCC","TMC-SL","Manila Med","Others"];
 var categories = ["Duty Food","House Food","Kids","Personal","Subscription","Gas","Car","Grocery","Clothing","Others","Payment"];
@@ -178,6 +181,8 @@ var entriesList = document.getElementById("entriesList");
 var totalIncomeElem = document.getElementById("totalIncome");
 var totalExpenseElem = document.getElementById("totalExpense");
 var methodsSummary = document.getElementById("methodsSummary");
+var backendHost = document.getElementById('backendHost');
+var backendBtn = document.getElementById('backendBtn');
 var backendStatus = document.getElementById("backendStatus");
 var lastError = document.getElementById("lastError");
 var segSlider = document.getElementById('segSlider');
@@ -294,14 +299,25 @@ function robustGet() {
     .then(function(r){ return readJsonOrText(r); })
     .then(function(data){
       console.log('[GET]', data);
-      if(!data || data.ok===false){ throw new Error((data && (data.error||data.raw)) || 'GET failed'); }
+      try{ backendHost.textContent = new URL(WEBAPP_URL).hostname; }catch(e){ backendHost.textContent='invalid'; }
+      if(data && data.message && /HH Audit backend/i.test(data.message)){
+        throw new Error('This URL points to your HH Audit backend. Click “Set backend” and paste the Expense Tracker Web App URL (the one you just deployed).');
+      }
+      if(!data || data.ok===false || !('expenses' in data)){
+        throw new Error((data && (data.error||data.raw)) || 'GET failed: unexpected response shape');
+      }
       backendStatus.textContent='ok'; backendStatus.className='ok'; lastError.textContent = '—';
       return data;
     })
     .catch(function(e){ backendStatus.textContent='error'; backendStatus.className='error'; lastError.textContent=e.message; console.error('[GET] error', e); throw e; });
 }
 
-function safeJson(resp){ return resp.json().catch(function(){ return {status:"ok"}; }); }
+function safeJson(resp){
+  return resp.text().then(function(txt){
+    try{ return JSON.parse(txt); }
+    catch(_){ return { ok:false, raw: txt }; }
+  });
+}
 
 // ====== Custom iOS-style date picker (no showPicker)
 (function(){
@@ -529,6 +545,20 @@ function sum(exp, inc) {
 }
 
 // ====== INIT ======
+// Backend quick setter
+function updateBackendHost(){ try{ backendHost.textContent = new URL(WEBAPP_URL).hostname; }catch(e){ backendHost.textContent = 'invalid'; } }
+if (backendBtn) {
+  backendBtn.onclick = function(){
+    var u = prompt('Enter Apps Script Web App URL (ends with /exec):', WEBAPP_URL);
+    if (!u) return;
+    WEBAPP_URL = u.trim();
+    localStorage.setItem('EXPENSE_WEBAPP_URL', WEBAPP_URL);
+    updateBackendHost();
+    lastError.textContent = 'Backend URL saved.';
+  };
+}
+updateBackendHost();
+// ====== INIT ======
 try { dateInput.valueAsDate = new Date(); } catch(e) { dateInput.value = normalizeDateString(new Date()); }
 
 dateDisplay.textContent = fmtNice(dateInput.value);
@@ -539,6 +569,20 @@ btnView.onclick = function(){ setMode("view"); };
 
 // default load
 setMode("expense");
+
+// ====== TESTS ======
+(function runTests(){
+  function assertEq(name, a, b){ if(String(a)!==String(b)){ console.error('[TEST FAIL]', name, a, '!=', b); } else { console.log('[TEST PASS]', name); } }
+  // date normalize
+  assertEq('normalize string', normalizeDateString('2025-11-02'), '2025-11-02');
+  assertEq('normalize Date', normalizeDateString(new Date('2025-11-02')).slice(0,10), '2025-11-02');
+  // shapers cope with weird column order
+  var rawExp=['2025-11-02','Cash','Grocery','123.45'];
+  var rawInc=[5,'2025-11-05','WCC','999.99'];
+  var e1=shapeExpenseRow(rawExp, 0); var i1=shapeIncomeRow(rawInc, 1);
+  assertEq('shapeExpenseRow.amount', Number(e1.amount).toFixed(2), '123.45');
+  assertEq('shapeIncomeRow.amount', Number(i1.amount).toFixed(2), '999.99');
+})();
 </script>
 </body>
 </html>
