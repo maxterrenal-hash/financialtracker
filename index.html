@@ -341,28 +341,8 @@ function goTab(key){
 }
 document.querySelectorAll('.tab-btn').forEach(btn=>{
   btn.addEventListener('click', ()=>{ goTab(btn.dataset.tab); });
-});
-
-// --- Meta & init ---
-let META = { incomeSources:[], expenseSources:[], defaultCategories:[] };
-function populateFromMeta(meta){
-  const m = meta || FALLBACK_META;
-  META.incomeSources = (m.incomeSources && m.incomeSources.length) ? m.incomeSources : FALLBACK_META.incomeSources;
-  META.expenseSources = (m.expenseSources && m.expenseSources.length) ? m.expenseSources : FALLBACK_META.expenseSources;
-  META.defaultCategories = (m.defaultCategories && m.defaultCategories.length) ? m.defaultCategories : FALLBACK_META.defaultCategories;
-  // Fill selects
-  const incSel = document.getElementById('inc-source'); incSel.innerHTML='';
-  META.incomeSources.forEach(v=>{ const o=document.createElement('option'); o.value=o.textContent=v; incSel.appendChild(o); });
-  const expSel = document.getElementById('exp-source'); expSel.innerHTML='';
-  META.expenseSources.forEach(v=>{ const o=document.createElement('option'); o.value=o.textContent=v; expSel.appendChild(o); });
-  // datalist
-  const dl = document.getElementById('exp-categories'); dl.innerHTML='';
-  META.defaultCategories.forEach(v=>{ const o=document.createElement('option'); o.value=v; dl.appendChild(o); });
-  // chips (quick pick)
-  const chips = document.getElementById('exp-cat-chips'); if (chips){ chips.innerHTML=''; META.defaultCategories.forEach(v=>{
-    const b=document.createElement('button'); b.type='button'; b.textContent=v; b.addEventListener('click', ()=>{ const inp=document.getElementById('exp-category'); inp.value=v; inp.dispatchEvent(new Event('input')); }); chips.appendChild(b);
-  }); }
-});
+}
+);
   const expSel = document.getElementById('exp-source'); expSel.innerHTML='';
   META.expenseSources.forEach(v=>{ const o=document.createElement('option'); o.value=o.textContent=v; expSel.appendChild(o); });
   const dl = document.getElementById('exp-categories'); dl.innerHTML='';
