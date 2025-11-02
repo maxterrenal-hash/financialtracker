@@ -341,22 +341,83 @@ window.handleLogs = (payload)=>{
   if (btn){ btn.disabled = false; btn.textContent = 'Refresh'; }
   if(!payload || !payload.ok){ toast('Failed to load logs', false); return; }
 
-  // Normalize rows from various shapes
+  // Normalize
   let rows = payload.rows || payload.data || payload.items || [];
   if (!Array.isArray(rows)) rows = [];
 
-  // Build unique source/category lists from raw data (before filtering)
+  // Build unique lists
   const allSources = Array.from(new Set(rows.map(r=>r.source).filter(Boolean))).sort();
   const allCategories = Array.from(new Set(rows.map(r=>r.category).filter(Boolean))).sort();
 
-  // Preserve filter selections and repopulate options
+  // Keep filter selections
   function keep(sel, items){ const cur = sel.value; sel.innerHTML = '<option value="">All</option>'; (items||[]).forEach(v=>{ const o=document.createElement('option'); o.value=v; o.textContent=v; sel.appendChild(o); }); if([...sel.options].some(o=>o.value===cur)) sel.value=cur; }
   keep(document.getElementById('filter-source'), allSources);
   keep(document.getElementById('filter-category'), allCategories);
 
-  // Apply client-side filters
+  // Apply filters
   const f = getFilters();
   const parseISO = (s)=>{ const d = new Date(s); return isNaN(d) ? null : d; };
+  const startD = f.start ? parseISO(f.start) : null;
+  const endD = f.end ? parseISO(f.end) : null;
+
+  const filtered = rows.filter(r=>{
+    const d = parseISO(r.dateISO);
+    if (!d) return false;
+    const y = d.getFullYear(); const m = d.getMonth()+1;
+    if (f.year && y !== Number(f.year)) return false;
+    if (f.month && m !== Number(f.month)) return false;
+    if (f.source && (r.source||'') !== f.source) return false;
+    if (f.category && (r.category||'') !== f.category) return false;
+    if (startD && d < startD) return false;
+    if (endD && d > endD) return false;
+    return true;
+  });
+
+  // Totals
+  let incomeSum = 0, expenseSum = 0;
+  filtered.forEach(r=>{ const amt = Number(r.amount)||0; ((r.type||'').toLowerCase()==='income') ? (incomeSum += amt) : (expenseSum += amt); });
+  const netVal = incomeSum - expenseSum;
+
+  document.getElementById('tot-income').textContent = incomeSum.toFixed(2);
+  document.getElementById('tot-expense').textContent = expenseSum.toFixed(2);
+  const netEl = document.getElementById('tot-net');
+  netEl.textContent = netVal.toFixed(2);
+  netEl.parentElement.classList.remove('ok','danger','neutral');
+  netEl.parentElement.classList.add(netVal>0 ? 'ok' : (netVal<0 ? 'danger' : 'neutral'));
+
+  // Chips
+  const chips = document.getElementById('active-filters'); chips.innerHTML='';
+  const addChip = (label,val)=>{ if(!val) return; const c=document.createElement('div'); c.className='chip'; c.textContent=label+': '+val; chips.appendChild(c); };
+  addChip('Year', f.year); addChip('Month', f.month); addChip('Source', f.source); addChip('Category', f.category);
+
+  // Render rows
+  const tbody = document.getElementById('log-body'); tbody.innerHTML='';
+  filtered.forEach(r=>{
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td data-col="Type">${r.type}</td>
+      <td data-col="Date">${r.dateISO}</td>
+      <td data-col="Amount">${Number(r.amount).toFixed(2)}</td>
+      <td data-col="Source">${r.source||''}</td>
+      <td data-col="Category">${r.category||''}</td>
+      <td data-col="Actions"><button class="delete-btn" data-sheet="${r.sheetName}" data-row="${r.sheetRow}">Delete</button></td>`;
+    tbody.appendChild(tr);
+  });
+  toast(`Loaded ${filtered.length} row(s).`);
+
+  // Bind deletes
+  tbody.querySelectorAll('.delete-btn').forEach(delBtn=>{
+    delBtn.addEventListener('click', ()=>{
+      const sheetName = delBtn.getAttribute('data-sheet');
+      const sheetRow = delBtn.getAttribute('data-row');
+      const summary = [...delBtn.closest('tr').children].slice(0,5).map(td=>td.textContent.trim()).join(' | ');
+      if(!confirm(`Delete this entry?\n\n${summary}`)) return;
+      delBtn.disabled = true;
+      window.handleDelete = (res)=>{ if(res && res.ok){ toast('Deleted.'); refreshView(); } else { toast('Delete failed', false); delBtn.disabled=false; } };
+      jsonpWithTimeout('delete', { sheetName, sheetRow }, 'handleDelete', ()=>{ delBtn.disabled=false; toast('Delete timed out', false); }, 7000);
+    });
+  });
+};
   const startD = f.start ? parseISO(f.start) : null;
   const endD = f.end ? parseISO(f.end) : null;
 
@@ -394,38 +455,6 @@ window.handleLogs = (payload)=>{
   const addChip = (label,val)=>{ if(!val) return; const c=document.createElement('div'); c.className='chip'; c.textContent=label+': '+val; chips.appendChild(c); };
   addChip('Year', f.year); addChip('Month', f.month); addChip('Source', f.source); addChip('Category', f.category);
 
-  // Render rows
-  const tbody = document.getElementById('log-body'); tbody.innerHTML='';
-  filtered.forEach(r=>{
-    const tr = document.createElement('tr');
-    tr.innerHTML = `
-      <td data-col="Type">${r.type}</td>
-      <td data-col="Date">${r.dateISO}</td>
-      <td data-col="Amount">${Number(r.amount).toFixed(2)}</td>
-      <td data-col="Source">${r.source||''}</td>
-      <td data-col="Category">${r.category||''}</td>
-      <td data-col="Actions"><button class="delete-btn" data-sheet="${r.sheetName}" data-row="${r.sheetRow}">Delete</button></td>`;
-    tbody.appendChild(tr);
-  });
-  toast(`Loaded ${filtered.length} row(s).`);
-
-  // Bind deletes
-  tbody.querySelectorAll('.delete-btn').forEach(delBtn=>{
-    delBtn.addEventListener('click', ()=>{
-      const sheetName = delBtn.getAttribute('data-sheet');
-      const sheetRow = delBtn.getAttribute('data-row');
-      const summary = [...delBtn.closest('tr').children].slice(0,5).map(td=>td.textContent.trim()).join(' | ');
-      if(!confirm(`Delete this entry?
-
-${summary}`)) return;
-      delBtn.disabled = true;
-      window.handleDelete = (res)=>{ if(res && res.ok){ toast('Deleted.'); refreshView(); } else { toast('Delete failed', false); delBtn.disabled=false; } };
-      jsonpWithTimeout('delete', { sheetName, sheetRow }, 'handleDelete', ()=>{ delBtn.disabled=false; toast('Delete timed out', false); }, 7000);
-    });
-  });
-};
-  addChip('Year', f.year); addChip('Month', f.month); addChip('Source', f.source); addChip('Category', f.category);
-
   const tbody = document.getElementById('log-body'); tbody.innerHTML='';
   (rows||[]).forEach(r=>{
     const tr = document.createElement('tr');
@@ -453,9 +482,7 @@ ${summary}`)) return;
   });
 };
 
-function refreshView(){ // request all rows; filter client-side to avoid backend filter mismatch
-  jsonp({action:'fetchlogs'}, 'handleLogs');
-}, getFilters()), 'handleLogs'); }
+function refreshView(){ jsonp({action:'fetchlogs'}, 'handleLogs'); }
 function refreshViewUI(){
   const btn = document.getElementById('refresh-view');
   if (btn){ const prev = btn.textContent; btn.textContent = 'Refreshing…'; btn.disabled = true; setTimeout(()=>{ btn.textContent = prev; btn.disabled = false; }, 4000); }
