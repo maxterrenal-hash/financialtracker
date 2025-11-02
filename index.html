@@ -1,609 +1,418 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Expense & Income Tracker — Dark</title>
-  <style>
-    html{overflow-x:hidden;}
-    body {box-sizing:border-box;margin:0;padding:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;background:#1c1c1e;color:#f2f2f7;display:flex;flex-direction:column;height:100vh;overflow-x:hidden;}
-    header { color:#0a84ff;padding:16px;font-size:24px;font-weight:600;text-align:center;position:sticky;top:0;z-index:100;background:rgba(28,28,30,0.75);backdrop-filter:blur(12px);border-bottom:1px solid rgba(255,255,255,0.08);}    
-
-    .segmented {display:flex;margin:8px auto;background:transparent;border-radius:20px;gap:8px;max-width:600px;width:calc(100% - 32px);position:relative;}
-    .segmented button {flex:1;padding:10px 0;border:none;background:#3a3a3c;font-size:16px;font-weight:500;color:#f2f2f7;border-radius:20px;transition:background 0.25s,color 0.25s;}
-    .segmented button.active {background:#0a84ff;color:#fff;box-shadow:0 2px 4px rgba(0,0,0,0.4);} 
-    #segSlider{position:absolute;top:0;bottom:0;left:0;width:33%;background:#007aff;border-radius:20px;transition:transform 0.25s ease;z-index:-1;}
-
-    form {background:#2c2c2e;margin:12px auto;padding:20px 16px;border-radius:12px;box-shadow:0 1px 3px rgba(0,0,0,0.4);max-width:600px;width:100%;box-sizing:border-box;} 
-    .form-group {margin-bottom:16px;} 
-    label {font-size:14px;color:#9a9aa0;display:block;margin-bottom:4px;} 
-    input, select {width:100%;padding:10px 12px;font-size:16px;border:1px solid #444;border-radius:6px;background:#3a3a3c;color:#f2f2f7;box-sizing:border-box;max-width:100%;} 
-    button.submit {width:100%;padding:12px;background:#007aff;color:#fff;font-size:16px;border:none;border-radius:8px;margin-top:12px;} 
-
-    #statusBar {display:none;margin:0 16px 8px; font-size:12px; color:#9a9aa0}
-    #formContainer {flex:1}
-    #viewContainer {flex:1;overflow:auto;margin:16px;display:none;} 
-
-    .entry {background:#2c2c2e;padding:12px 16px;margin-bottom:8px;border-radius:8px;display:flex;justify-content:space-between;align-items:center;box-shadow:0 1px 2px rgba(0,0,0,0.5);position:relative;overflow:hidden;touch-action:pan-y;} 
-    .entry .info {display:flex;flex-direction:row;justify-content:space-between;width:100%;gap:8px;} 
-    .entry .info .date {flex:1;font-size:12px;color:#9a9aa0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;} 
-    .entry .info .amount {flex:1;font-size:16px;font-weight:600;text-align:center;white-space:nowrap;} 
-    .entry .info .meta {flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:right;} 
-    .entry .deleteBtn {position:absolute;right:-60px;top:0;height:100%;width:60px;background:#ff3b30;color:#fff;border:none;border-radius:0 8px 8px 0;transition:right 0.25s;padding:0;display:flex;align-items:center;justify-content:center;} 
-
-    .totals {background:#2c2c2e;margin:16px;padding:12px;border-radius:12px;box-shadow:0 1px 2px rgba(0,0,0,0.5);display:flex;justify-content:space-between;align-items:center;font-size:15px;font-weight:500;}
-    .totals .label {color:#9a9aa0;font-size:13px;}
-    .totals .value {font-weight:600;}
-    .totals .divider {width:1px;height:28px;background:#3a3a3c;margin:0 12px;}
-
-    /* iOS-style date display field */
-    #dateDisplay{padding:12px 14px;border:1px solid #444;border-radius:10px;background:#3a3a3c;font-size:16px;color:#f2f2f7;cursor:pointer;}
-    input[type=date]{max-width:100%;}
-    input[type=number]{max-width:100%;}
-
-    /* Date modal — DARK */
-    #dateModal{position:fixed;inset:0;background:rgba(0,0,0,0.5);display:none;align-items:center;justify-content:center;z-index:9998;}
-    #dateModal .sheet{background:#1c1c1e;width:88%;max-width:360px;border-radius:16px;overflow:hidden;box-shadow:0 10px 28px rgba(0,0,0,0.6), 0 2px 8px rgba(0,0,0,0.4);border:1px solid #2a2a2b;} 
-    #dateModal .body{padding:16px 16px 0;}
-    #dateModal .row{display:flex;gap:8px;margin-bottom:16px;}
-    #dateModal select{flex:1;padding:10px 12px;font-size:16px;border:1px solid #444;border-radius:10px;background:#2c2c2e;color:#f2f2f7;}
-    #dateModal .actions{display:flex;border-top:1px solid #2a2a2b;}
-    #dateCancel, #dateOk{flex:1;padding:14px;border:none;background:#1c1c1e;font-size:16px;color:#0a84ff;}
-    #dateOk{font-weight:600;}
-
-    /* iOS-style confirm modal — DARK */
-    #iosModal{position:fixed;inset:0;background:rgba(0,0,0,0.55);backdrop-filter:blur(8px);display:none;align-items:center;justify-content:center;z-index:9999;}
-    #iosModal .card{background:#1c1c1e;width:85%;max-width:320px;border-radius:18px;overflow:hidden;font-size:16px;box-shadow:0 10px 28px rgba(0,0,0,0.6), 0 2px 8px rgba(0,0,0,0.4);border:1px solid #2a2a2b;}
-    #iosModalText{padding:20px;text-align:center;white-space:pre-line;color:#f2f2f7;}
-    #iosModal .row{display:flex;border-top:1px solid #2a2a2b;}
-    #iosCancel, #iosConfirm{flex:1;padding:14px;border:none;background:#1c1c1e;font-size:16px;color:#0a84ff;}
-    #iosConfirm{font-weight:600;}
-
-    /* View tab filter controls should inherit dark inputs */
-    #viewContainer .form-group select{background:#3a3a3c;color:#f2f2f7;border:1px solid #444;}
-    #backendBtn.mini{margin-left:8px;padding:4px 8px;font-size:12px;border:1px solid #444;background:#2c2c2e;color:#f2f2f7;border-radius:6px;}
-    #backendBtn.mini:hover{background:#3a3a3c;}
-  </style>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script>
-    // Header blur on scroll
-    window.addEventListener('scroll',function(){
-      var sc=window.scrollY||document.documentElement.scrollTop;
-      if(sc>4){document.documentElement.style.setProperty('--hdr-bg','0.92');document.documentElement.style.setProperty('--hdr-blur','18px');}
-      else{document.documentElement.style.setProperty('--hdr-bg','0.75');document.documentElement.style.setProperty('--hdr-blur','10px');}
-    });
-  </script>
+<meta charset="UTF-8" />
+<meta name="color-scheme" content="dark" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Financial Tracker</title>
+<style>
+  :root {
+    --bg: #0b0f14;
+    --panel: #10151c;
+    --panel-2: #141a22;
+    --text: #e6edf3;
+    --muted: #aab6c3;
+    --accent: #4f46e5;   /* indigo */
+    --accent-2: #14b8a6; /* teal for "nice" moments */
+    --danger: #ef4444;
+    --ok: #22c55e;
+    --input: #0f1720;
+    --border: #1f2a37;
+    --chip: #1a2230;
+    --row-alt: #0f141b;
+    --focus: #2563eb;
+  }
+  html, body {
+    margin: 0; padding: 0; background: var(--bg); color: var(--text); font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Inter, "Helvetica Neue", Arial, "Apple Color Emoji","Segoe UI Emoji";
+  }
+  .wrap { max-width: 1100px; margin: 0 auto; padding: 20px; }
+  h1 { font-size: 1.4rem; margin: 0 0 12px; font-weight: 700; }
+  .tabs { display: flex; gap: 8px; margin-bottom: 14px; flex-wrap: wrap; }
+  .tab-btn {
+    background: var(--panel); border: 1px solid var(--border); color: var(--text);
+    padding: 10px 14px; border-radius: 10px; cursor: pointer; font-weight: 600;
+  }
+  .tab-btn.active { background: var(--accent); border-color: var(--accent); }
+  .card {
+    background: linear-gradient(180deg, var(--panel), var(--panel-2));
+    border: 1px solid var(--border); border-radius: 14px; padding: 16px; margin-bottom: 14px;
+    box-shadow: 0 0 0 1px rgba(255,255,255,0.02) inset;
+  }
+  .row { display: grid; grid-template-columns: repeat(12, 1fr); gap: 10px; margin-bottom: 12px; }
+  .col-3 { grid-column: span 3; } .col-4 { grid-column: span 4; } .col-6 { grid-column: span 6; } .col-8 { grid-column: span 8; } .col-12 { grid-column: span 12; }
+  label { display: block; font-size: 0.9rem; margin-bottom: 6px; color: var(--muted); }
+  input[type="date"], input[type="number"], input[type="text"], select, datalist {
+    width: 100%; background: var(--input); color: var(--text);
+    border: 1px solid var(--border); border-radius: 10px; padding: 10px 12px;
+    outline: none;
+  }
+  input:focus, select:focus { border-color: var(--focus); box-shadow: 0 0 0 3px rgba(37,99,235,0.2); }
+  .btn {
+    background: var(--accent); border: 1px solid var(--accent); color: white;
+    padding: 10px 14px; border-radius: 10px; cursor: pointer; font-weight: 700;
+  }
+  .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+  .btn.secondary { background: transparent; border: 1px solid var(--border); }
+  .chips { display: flex; gap: 8px; flex-wrap: wrap; }
+  .chip { background: var(--chip); border: 1px solid var(--border); border-radius: 999px; padding: 6px 10px; font-size: 0.85rem; color: var(--muted); }
+  .totals { display: flex; gap: 10px; flex-wrap: wrap; }
+  .total { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 10px 12px; }
+  table { width: 100%; border-collapse: collapse; margin-top: 8px; }
+  th, td { text-align: left; padding: 10px 8px; border-bottom: 1px solid var(--border); }
+  thead th { font-size: 0.85rem; color: var(--muted); }
+  tbody tr:nth-child(even) { background: var(--row-alt); }
+  .danger { color: var(--danger); }
+  .ok { color: var(--ok); }
+  .toast {
+    position: fixed; right: 16px; bottom: 16px; background: var(--panel); border: 1px solid var(--border);
+    color: var(--text); padding: 10px 14px; border-radius: 10px; opacity: 0; transform: translateY(10px);
+    transition: all .2s ease; pointer-events: none;
+  }
+  .toast.show { opacity: 1; transform: translateY(0); }
+  .flex { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+  .spacer { flex: 1; }
+  .delete-btn {
+    background: transparent; color: var(--danger); border: 1px solid var(--danger); padding: 6px 10px;
+    border-radius: 8px; cursor: pointer; font-weight: 700;
+  }
+  .muted { color: var(--muted); font-size: 0.9rem; }
+</style>
 </head>
 <body>
-<header>Financial Tracker</header>
-<div class="segmented">
-  <div id="segSlider"></div>
-  <button id="btnIncome">Income</button>
-  <button id="btnExpense" class="active">Expense</button>
-  <button id="btnView">View</button>
-</div>
-<div id="statusBar">Backend: <span id="backendStatus">unknown</span> · Host: <span id="backendHost">—</span> · Last error: <span id="lastError">—</span> <button id="backendBtn" class="mini">Set backend</button></div>
+<div class="wrap">
+  <h1>Financial Tracker</h1>
 
-<div id="formContainer">
-  <form id="entryForm">
-    <div class="form-group">
-      <label>Date</label>
-      <div id="dateDisplay">Select Date</div>
-      <!-- real input retained for value + submission -->
-      <input type="date" id="date" required style="opacity:0;position:absolute;pointer-events:none;"/>
-    </div>
-    <div class="form-group"><label>Amount (PHP)</label><input type="number" id="amount" step="0.01" min="0.01" required></div>
-    <div class="form-group"><label>Method / Source</label><select id="methodSource" required></select></div>
-    <div class="form-group" id="categoryGroup"><label>Category</label>
-      <select id="category">
-        <option>Duty Food</option><option>House Food</option><option>Kids</option><option>Personal</option><option>Subscription</option><option>Gas</option><option>Car</option><option>Grocery</option><option>Clothing</option><option>Others</option><option>Payment</option>
-      </select>
-    </div>
-    <button type="submit" class="submit">Submit</button>
-  </form>
-</div>
+  <div class="tabs">
+    <button class="tab-btn active" data-tab="income">Income</button>
+    <button class="tab-btn" data-tab="expenses">Expenses</button>
+    <button class="tab-btn" data-tab="view">View</button>
+  </div>
 
-<div id="viewContainer">
-  <div class="form-group" style="margin:0 16px 16px; display:flex; gap:8px;">
-    <div style="flex:1;"><label>Month</label><select id="monthFilter"><option value="all">All</option><option value="01">January</option><option value="02">February</option><option value="03">March</option><option value="04">April</option><option value="05">May</option><option value="06">June</option><option value="07">July</option><option value="08">August</option><option value="09">September</option><option value="10">October</option><option value="11">November</option><option value="12">December</option></select></div>
-    <div style="flex:1;"><label>Year</label><select id="yearFilter"></select></div>
-  </div>
-  <div class="totals">
-    <div style="text-align:center;flex:1;">
-      <div class="label">Income</div>
-      <div id="totalIncome" class="value" style="font-size:18px;">0</div>
-    </div>
-    <div class="divider"></div>
-    <div style="text-align:center;flex:1;">
-      <div class="label">Expense</div>
-      <div id="totalExpense" class="value" style="font-size:18px;">0</div>
-    </div>
-  </div>
-  <div style="margin-top:16px;">
-    <canvas id="expensePie" height="200"></canvas>
-  </div>
-  <div id="entriesList" style="margin-top:16px;"></div>
-  <div id="methodsSummary" style="display:none;"></div>
-</div>
-
-<!-- iOS-style confirm modal (dark) -->
-<div id="iosModal">
-  <div class="card">
-    <div id="iosModalText"></div>
+  <!-- Income Tab -->
+  <section id="tab-income" class="card">
     <div class="row">
-      <button id="iosCancel">Cancel</button>
-      <div style="width:1px;background:#2a2a2b;"></div>
-      <button id="iosConfirm">Confirm</button>
-    </div>
-  </div>
-</div>
-
-<!-- Custom Date Picker Modal (dark) -->
-<div id="dateModal">
-  <div class="sheet">
-    <div class="body">
-      <div class="row">
-        <select id="dmMonth"></select>
-        <select id="dmDay"></select>
-        <select id="dmYear"></select>
+      <div class="col-4">
+        <label for="inc-date">Date</label>
+        <input type="date" id="inc-date" />
+      </div>
+      <div class="col-4">
+        <label for="inc-amount">Amount (PHP)</label>
+        <input type="number" id="inc-amount" inputmode="decimal" min="0.01" step="0.01" placeholder="0.00" />
+      </div>
+      <div class="col-4">
+        <label for="inc-source">Source</label>
+        <select id="inc-source"></select>
+      </div>
+      <div class="col-12">
+        <label for="inc-remarks">Remarks</label>
+        <input type="text" id="inc-remarks" placeholder="optional" />
       </div>
     </div>
-    <div class="actions">
-      <button id="dateCancel">Cancel</button>
-      <button id="dateOk">OK</button>
+    <button class="btn" id="inc-submit">Submit Income</button>
+  </section>
+
+  <!-- Expenses Tab -->
+  <section id="tab-expenses" class="card" style="display:none">
+    <div class="row">
+      <div class="col-3">
+        <label for="exp-date">Date</label>
+        <input type="date" id="exp-date" />
+      </div>
+      <div class="col-3">
+        <label for="exp-amount">Amount (PHP)</label>
+        <input type="number" id="exp-amount" inputmode="decimal" min="0.01" step="0.01" placeholder="0.00" />
+      </div>
+      <div class="col-3">
+        <label for="exp-source">Source</label>
+        <select id="exp-source"></select>
+      </div>
+      <div class="col-3">
+        <label for="exp-category">Category</label>
+        <!-- free text allowed with suggestions -->
+        <input list="exp-categories" id="exp-category" placeholder="Start typing or pick..." />
+        <datalist id="exp-categories"></datalist>
+      </div>
+      <div class="col-12">
+        <label for="exp-remarks">Remarks</label>
+        <input type="text" id="exp-remarks" placeholder="optional" />
+      </div>
     </div>
-  </div>
+    <button class="btn" id="exp-submit">Submit Expense</button>
+  </section>
+
+  <!-- View Tab -->
+  <section id="tab-view" class="card" style="display:none">
+    <div class="row">
+      <div class="col-3">
+        <label for="filter-year">Year</label>
+        <select id="filter-year"></select>
+      </div>
+      <div class="col-3">
+        <label for="filter-month">Month</label>
+        <select id="filter-month">
+          <option value="">All</option>
+          <option value="1">Jan</option><option value="2">Feb</option><option value="3">Mar</option>
+          <option value="4">Apr</option><option value="5">May</option><option value="6">Jun</option>
+          <option value="7">Jul</option><option value="8">Aug</option><option value="9">Sep</option>
+          <option value="10">Oct</option><option value="11">Nov</option><option value="12">Dec</option>
+        </select>
+      </div>
+      <div class="col-3">
+        <label for="filter-source">Source</label>
+        <select id="filter-source"><option value="">All</option></select>
+      </div>
+      <div class="col-3">
+        <label for="filter-category">Category</label>
+        <select id="filter-category"><option value="">All</option></select>
+      </div>
+    </div>
+
+    <div class="totals">
+      <div class="total"><strong>Income:</strong> <span id="tot-income" class="ok">0.00</span></div>
+      <div class="total"><strong>Expenses:</strong> <span id="tot-expense" class="danger">0.00</span></div>
+      <div class="total"><strong>Net:</strong> <span id="tot-net">0.00</span></div>
+      <div class="spacer"></div>
+      <button class="btn secondary" id="refresh-view">Refresh</button>
+    </div>
+
+    <div class="card" style="margin-top:12px">
+      <div class="flex">
+        <div class="muted">Log entries (Income + Expenses)</div>
+        <div class="spacer"></div>
+        <div class="chips" id="active-filters"></div>
+      </div>
+      <table>
+        <thead>
+          <tr>
+            <th>Type</th>
+            <th>Date</th>
+            <th>Amount</th>
+            <th>Source</th>
+            <th>Category</th>
+            <th>Remarks</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="log-body"></tbody>
+      </table>
+    </div>
+  </section>
 </div>
 
+<div id="toast" class="toast"></div>
+
 <script>
-// ====== CONFIG ======
-var DEFAULT_WEBAPP_URL = "https://script.google.com/macros/s/AKfycbze3tIAAebpW5r_nz7tMcL4dpdXURj4-1hgV4PNkKJi4-ZJItfXnBXrMUwPLO22dl3d/exec";
-var WEBAPP_URL = localStorage.getItem('EXPENSE_WEBAPP_URL') || DEFAULT_WEBAPP_URL;
-var expenseMethods = ["Cash","Gcash","BPI Credit Card","Security Bank Cashback","Security Bank Rewards","BPI Rewards","UnionBank"];
-var incomeSources = ["Gcash","WCC","TMC-SL","Manila Med","Others"];
-var categories = ["Duty Food","House Food","Kids","Personal","Subscription","Gas","Car","Grocery","Clothing","Others","Payment"];
+// Meta injected from server
+const META = <?= JSON.stringify(meta) ?>;
 
-// ====== STATE / ELEMENTS ======
-var currentMode = "expense";
-var btnIncome = document.getElementById("btnIncome");
-var btnExpense = document.getElementById("btnExpense");
-var btnView = document.getElementById("btnView");
-var formContainer = document.getElementById("formContainer");
-var viewContainer = document.getElementById("viewContainer");
-var entryForm = document.getElementById("entryForm");
-var dateInput = document.getElementById("date");
-var dateDisplay = document.getElementById("dateDisplay");
-var amountInput = document.getElementById("amount");
-var methodSource = document.getElementById("methodSource");
-var categoryGroup = document.getElementById("categoryGroup");
-var category = document.getElementById("category");
-var entriesList = document.getElementById("entriesList");
-var totalIncomeElem = document.getElementById("totalIncome");
-var totalExpenseElem = document.getElementById("totalExpense");
-var methodsSummary = document.getElementById("methodsSummary");
-var backendHost = document.getElementById('backendHost');
-var backendBtn = document.getElementById('backendBtn');
-var backendStatus = document.getElementById("backendStatus");
-var lastError = document.getElementById("lastError");
-var segSlider = document.getElementById('segSlider');
-
-var expenses = [], income = [];
-
-// ====== HELPERS ======
-function normalizeDateString(d) {
-  if (!d) return "";
-  if (typeof d === "string") return d.split("T")[0];
-  if (d instanceof Date) {
-    var yyyy = d.getFullYear();
-    var mm = String(d.getMonth()+1).padStart(2,'0');
-    var dd = String(d.getDate()).padStart(2,'0');
-    return yyyy+"-"+mm+"-"+dd;
-  }
-  var dt = new Date(d);
-  if (!isNaN(dt.getTime())) return normalizeDateString(dt);
-  return "";
-}
-function fmtNice(iso){
-  // Avoid timezone shifts from `new Date('YYYY-MM-DD')` (often parsed as UTC).
-  if(!iso || typeof iso !== 'string' || iso.length < 10) return '';
-  var y = Number(iso.slice(0,4));
-  var m = Number(iso.slice(5,7));
-  var d = Number(iso.slice(8,10));
-  var dt = new Date(y, m-1, d); // local date
-  try {
-    return dt.toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' });
-  } catch(_) {
-    var MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-    return MONTHS[m-1] + ' ' + d + ', ' + y;
-  }
-}
-
-function isPlainNumberStr(s){ return typeof s==='string' && /^\d+(?:\.\d+)?$/.test(s.trim()); }
-function isIsoDateStr(s){ return typeof s==='string' && /^\d{4}-\d{2}-\d{2}/.test(s); }
-
-function shapeExpenseRow(r, i){
-  var rowIndex = (typeof r[0]==='number' && !isNaN(r[0])) ? r[0] : i;
-  var date, amount, method, cat;
-  for(var k=0;k<r.length;k++){ if(isIsoDateStr(String(r[k]))){ date = normalizeDateString(String(r[k])); break; } }
-  for(var k=0;k<r.length;k++){
-    var v = r[k];
-    if(typeof v==='number'){ amount = v; break; }
-    if(isPlainNumberStr(String(v))){ amount = parseFloat(v); break; }
-  }
-  for(var k=0;k<r.length;k++){ if(expenseMethods.indexOf(String(r[k]))>-1){ method = String(r[k]); break; } }
-  for(var k=0;k<r.length;k++){ if(categories.indexOf(String(r[k]))>-1){ cat = String(r[k]); break; } }
-  return { idx: rowIndex, date: date||'', amount: amount||0, method: method||'', category: cat||'' };
-}
-function shapeIncomeRow(r, i){
-  var rowIndex = (typeof r[0]==='number' && !isNaN(r[0])) ? r[0] : i;
-  var date, amount, source;
-  for(var k=0;k<r.length;k++){ if(isIsoDateStr(String(r[k]))){ date = normalizeDateString(String(r[k])); break; } }
-  for(var k=0;k<r.length;k++){
-    var v = r[k];
-    if(typeof v==='number'){ amount = v; break; }
-    if(isPlainNumberStr(String(v))){ amount = parseFloat(v); break; }
-  }
-  for(var k=0;k<r.length;k++){ if(incomeSources.indexOf(String(r[k]))>-1){ source = String(r[k]); break; } }
-  return { idx: rowIndex, date: date||'', amount: amount||0, source: source||'' };
-}
-
-function setMode(m) {
-  currentMode = m;
-  btnIncome.classList.remove("active");
-  btnExpense.classList.remove("active");
-  btnView.classList.remove("active");
-  if (m === "income") btnIncome.classList.add("active");
-  else if (m === "expense") btnExpense.classList.add("active");
-  else btnView.classList.add("active");
-
-  if (m === "view") {
-    formContainer.style.display = "none";
-    viewContainer.style.opacity = 0; viewContainer.style.display = "block"; requestAnimationFrame(function(){viewContainer.style.transition="opacity 0.25s ease"; viewContainer.style.opacity = 1;});
-    fetchData();
-  } else {
-    viewContainer.style.display = "none";
-    formContainer.style.opacity = 0; formContainer.style.display = "block"; requestAnimationFrame(function(){formContainer.style.transition="opacity 0.25s ease"; formContainer.style.opacity = 1;});
-    categoryGroup.style.display = (m === "expense" ? "block" : "none");
-    loadOptions(m);
-  }
-  updateSlider();
-}
-function updateSlider(){ var idx = (currentMode==='income'?0:(currentMode==='expense'?1:2)); segSlider.style.transform = "translateX("+(idx*100)+"%)"; }
-
-function loadOptions(m) {
-  methodSource.innerHTML = "";
-  (m === "expense" ? expenseMethods : incomeSources).forEach(function(v){
-    var o = document.createElement("option");
-    o.value = v; o.textContent = v; methodSource.appendChild(o);
+// Tabs
+document.querySelectorAll('.tab-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    const tab = btn.dataset.tab;
+    document.querySelectorAll('section[id^="tab-"]').forEach(s => s.style.display = 'none');
+    document.getElementById('tab-' + tab).style.display = '';
   });
-}
-
-// ====== BACKEND CALLS WITH FALLBACKS ======
-function robustPost(payload) {
-  return fetch(WEBAPP_URL, {method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify(payload)})
-    .then(function(r){
-      if (r.ok) { backendStatus.textContent = 'ok'; backendStatus.className='ok'; return safeJson(r); }
-      return r.text().then(function(txt){ throw new Error("HTTP "+r.status+" "+r.statusText+" :: "+txt); });
-    })
-    .catch(function(e1){
-      lastError.textContent = e1.message;
-      return fetch(WEBAPP_URL, {method:"POST", headers:{"Content-Type":"text/plain"}, body: JSON.stringify(payload)})
-        .then(function(r2){ if(r2.ok){ backendStatus.textContent='ok'; backendStatus.className='ok'; return safeJson(r2);} return r2.text().then(function(txt2){ throw new Error("Fallback1 HTTP "+r2.status+" :: "+txt2); }); })
-        .catch(function(e2){
-          lastError.textContent = e2.message;
-          return fetch(WEBAPP_URL, {method:"POST", headers:{"Content-Type":"application/x-www-form-urlencoded"}, body: JSON.stringify(payload)})
-            .then(function(r3){ if(r3.ok){ backendStatus.textContent='ok'; backendStatus.className='ok'; return safeJson(r3);} return r3.text().then(function(txt3){ throw new Error("Fallback2 HTTP "+r3.status+" :: "+txt3); }); })
-            .catch(function(e3){ backendStatus.textContent='error'; backendStatus.className='error'; lastError.textContent=e3.message; document.getElementById('statusBar').style.display='block'; throw e3; });
-        });
-    });
-}
-
-function readJsonOrText(resp){
-  return resp.text().then(function(txt){
-    try { return JSON.parse(txt); } catch(e) { return { ok:false, raw: txt }; }
-  });
-}
-
-function robustGet() {
-  const url = WEBAPP_URL + '?nocache=' + Date.now();
-  document.getElementById('statusBar').style.display='block';
-  lastError.textContent = 'loading…';
-  return fetch(url)
-    .then(function(r){ return readJsonOrText(r); })
-    .then(function(data){
-      console.log('[GET]', data);
-      try{ backendHost.textContent = new URL(WEBAPP_URL).hostname; }catch(e){ backendHost.textContent='invalid'; }
-      if(data && data.message && /HH Audit backend/i.test(data.message)){
-        throw new Error('This URL points to your HH Audit backend. Click “Set backend” and paste the Expense Tracker Web App URL (the one you just deployed).');
-      }
-      if(!data || data.ok===false || !('expenses' in data)){
-        throw new Error((data && (data.error||data.raw)) || 'GET failed: unexpected response shape');
-      }
-      backendStatus.textContent='ok'; backendStatus.className='ok'; lastError.textContent = '—';
-      return data;
-    })
-    .catch(function(e){ backendStatus.textContent='error'; backendStatus.className='error'; lastError.textContent=e.message; console.error('[GET] error', e); throw e; });
-}
-
-function safeJson(resp){
-  return resp.text().then(function(txt){
-    try{ return JSON.parse(txt); }
-    catch(_){ return { ok:false, raw: txt }; }
-  });
-}
-
-// ====== Custom iOS-style date picker (no showPicker)
-(function(){
-  var modal = document.getElementById('dateModal');
-  var mSel = document.getElementById('dmMonth');
-  var dSel = document.getElementById('dmDay');
-  var ySel = document.getElementById('dmYear');
-  var cancelBtn = document.getElementById('dateCancel');
-  var okBtn = document.getElementById('dateOk');
-
-  var months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-  function pad(n){return String(n).padStart(2,'0');}
-  function daysInMonth(y,m){ return new Date(y,m+1,0).getDate(); }
-
-  function populateYears(){
-    ySel.innerHTML = '';
-    var thisY = new Date().getFullYear();
-    for(var y=thisY+1; y>=thisY-10; y--){ var o=document.createElement('option'); o.value=y; o.textContent=y; ySel.appendChild(o);}    
-  }
-  function populateMonths(){
-    mSel.innerHTML = '';
-    months.forEach(function(lbl,i){ var o=document.createElement('option'); o.value=pad(i+1); o.textContent=lbl; mSel.appendChild(o); });
-  }
-  function populateDays(y,m){
-    dSel.innerHTML=''; var max=daysInMonth(+y, (+m)-1);
-    for(var d=1; d<=max; d++){ var o=document.createElement('option'); o.value=pad(d); o.textContent=d; dSel.appendChild(o); }
-  }
-
-  function openWith(iso){
-    var base = (iso && iso.length>=10) ? iso : normalizeDateString(new Date());
-    var Y = base.slice(0,4), M = base.slice(5,7), D = base.slice(8,10);
-    populateYears(); populateMonths(); populateDays(Y,M);
-    ySel.value = Y; mSel.value = M; dSel.value = D;
-    modal.style.display = 'flex';
-  }
-
-  function close(){ modal.style.display = 'none'; }
-
-  dateDisplay.addEventListener('click', function(){ openWith(dateInput.value); });
-  cancelBtn.addEventListener('click', close);
-  okBtn.addEventListener('click', function(){
-    var iso = ySel.value+"-"+mSel.value+"-"+dSel.value;
-    dateInput.value = iso;
-    dateDisplay.textContent = fmtNice(iso);
-    close();
-  });
-  mSel.addEventListener('change', function(){ populateDays(ySel.value, mSel.value); });
-  ySel.addEventListener('change', function(){ populateDays(ySel.value, mSel.value); });
-
-  // init today
-  try { dateInput.valueAsDate = new Date(); } catch(e) { dateInput.value = normalizeDateString(new Date()); }
-  dateDisplay.textContent = fmtNice(dateInput.value);
-})();
-
-// ====== FORM SUBMIT ======
-entryForm.addEventListener("submit", function(e){
-  e.preventDefault();
-  var amt = parseFloat(amountInput.value);
-  if (isNaN(amt) || amt <= 0) { alert("Please enter a valid amount > 0."); return; }
-
-  var msg = (currentMode === "expense" ? "Expense" : "Income")+" Entry\n"+
-            "Date: "+dateInput.value+"\n"+
-            "Amount: ₱"+amt.toFixed(2)+"\n"+
-            (currentMode === "expense" ? ("Method: "+methodSource.value+"\nCategory: "+category.value+"\n") : ("Source: "+methodSource.value+"\n"));
-
-  var modal = document.getElementById('iosModal');
-  var modalText = document.getElementById('iosModalText');
-  modalText.textContent = msg; modal.style.display = 'flex';
-
-  // Ensure valid ISO date; fallback to today to avoid invalid/NaN dates reaching backend
-var isoToday = normalizeDateString(new Date());
-if (!(dateInput.value && dateInput.value.length>=10 && dateInput.value[4]==='-' && dateInput.value[7]==='-')) {
-  dateInput.value = isoToday;
-  dateDisplay.textContent = fmtNice(isoToday);
-}
-// Include date parts to let backend write a timezone-safe Date
-var dISO = dateInput.value; // 'YYYY-MM-DD' (guaranteed)
-var payload = { type: currentMode, date: dISO, dateY: Number(dISO.slice(0,4)), dateM: Number(dISO.slice(5,7)), dateD: Number(dISO.slice(8,10)), amount: amt };
-  if (currentMode === "expense") { payload.method = methodSource.value; payload.category = category.value; }
-  else { payload.source = methodSource.value; }
-
-  var confirmBtn = document.getElementById('iosConfirm');
-  var cancelBtn = document.getElementById('iosCancel');
-
-  function handleCancel(){ modal.style.display='none'; cancelBtn.removeEventListener('click', handleCancel); confirmBtn.removeEventListener('click', handleConfirm); }
-  function handleConfirm(){
-    modal.style.display='none';
-    cancelBtn.removeEventListener('click', handleCancel);
-    confirmBtn.removeEventListener('click', handleConfirm);
-    robustPost(payload)
-      .then(function(res){ console.log('[POST] success', res); var todayIso = normalizeDateString(new Date()); try { dateInput.valueAsDate = new Date(); } catch(e) { dateInput.value = todayIso; } dateDisplay.textContent = fmtNice(dateInput.value); amountInput.value = ""; fetchData(); })
-      .catch(function(){ document.getElementById('statusBar').style.display='block'; alert("Network or server error. See status line."); });
-  }
-  cancelBtn.addEventListener('click', handleCancel);
-  confirmBtn.addEventListener('click', handleConfirm);
 });
 
-// ====== DATA FETCH / FILTER ======
-function fetchData() {
-  return robustGet()
-    .then(function(d){
-      expenses = Array.isArray(d.expenses) ? d.expenses.map(function(r,i){ return shapeExpenseRow(r,i); }).filter(function(r){ return r.date && r.amount>0; }) : [];
-      income   = Array.isArray(d.income) ? d.income.map(function(r,i){ return shapeIncomeRow(r,i); }).filter(function(r){ return r.date && r.amount>0 && r.source; }) : [];
-      applyFilter();
-      populateYearsDropdown();
-    })
-    .catch(function(){ /* already surfaced */ });
+// Toast
+function toast(msg, ok=true) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.style.borderColor = ok ? 'var(--ok)' : 'var(--danger)';
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2000);
 }
 
-function populateYearsDropdown(){
-  var years = new Set();
-  expenses.concat(income).forEach(function(r){ var ds = normalizeDateString(r.date); if(ds) years.add(ds.slice(0,4)); });
-  var ySel = document.getElementById('yearFilter');
-  if(!ySel) return; ySel.innerHTML='';
-  var arr=Array.from(years).sort();
-  var thisY=new Date().getFullYear(); if(arr.indexOf(String(thisY))===-1) arr.push(String(thisY));
-  arr.forEach(function(y){ var o=document.createElement('option'); o.value=y; o.textContent=y; ySel.appendChild(o); });
-}
+// Populate selects
+function initUI() {
+  // Defaults
+  google.script.run.withSuccessHandler(({todayISO}) => {
+    document.getElementById('inc-date').value = todayISO;
+    document.getElementById('exp-date').value = todayISO;
+  }).getMeta();
 
-function applyFilter() {
-  var m = document.getElementById("monthFilter").value;
-  var ySel = document.getElementById('yearFilter');
-  var y = (ySel && ySel.value) ? ySel.value : 'all';
-  var exp = expenses.slice(), inc = income.slice();
-  if (m !== "all" || y !== 'all') {
-    exp = expenses.filter(function(r){ var ds = normalizeDateString(r.date); if(!ds) return false; var mm = ds.split("-")[1]; var yy = ds.slice(0,4); return (m==='all'||mm===m) && (y==='all'||yy===y); });
-    inc = income.filter(function(r){ var ds = normalizeDateString(r.date); if(!ds) return false; var mm = ds.split("-")[1]; var yy = ds.slice(0,4); return (m==='all'||mm===m) && (y==='all'||yy===y); });
+  // Income sources
+  const incSel = document.getElementById('inc-source');
+  META.incomeSources.forEach(v => {
+    const o = document.createElement('option'); o.value = o.textContent = v; incSel.appendChild(o);
+  });
+  // Expense sources
+  const expSel = document.getElementById('exp-source');
+  META.expenseSources.forEach(v => {
+    const o = document.createElement('option'); o.value = o.textContent = v; expSel.appendChild(o);
+  });
+  // Categories datalist
+  const dl = document.getElementById('exp-categories');
+  META.defaultCategories.forEach(v => {
+    const o = document.createElement('option'); o.value = v; dl.appendChild(o);
+  });
+
+  // Year options: current year ± 4
+  const ySel = document.getElementById('filter-year');
+  const now = new Date();
+  const curY = now.getFullYear();
+  for (let y = curY + 1; y >= curY - 4; y--) {
+    const o = document.createElement('option');
+    o.value = String(y); o.textContent = y; if (y === curY) o.selected = true;
+    ySel.appendChild(o);
   }
-  render(exp, inc);
-  sum(exp, inc);
+}
+initUI();
+
+// Validations
+function parseAmount(el) {
+  const v = Number(el.value);
+  if (!isFinite(v) || v <= 0) return null;
+  return +v.toFixed(2);
 }
 
-document.getElementById("monthFilter").addEventListener("change", applyFilter);
-var yearFilter = document.getElementById('yearFilter'); if(yearFilter) yearFilter.addEventListener('change', applyFilter);
+// Submit Income
+document.getElementById('inc-submit').addEventListener('click', () => {
+  const dateISO = document.getElementById('inc-date').value;
+  const amount = parseAmount(document.getElementById('inc-amount'));
+  const source = document.getElementById('inc-source').value;
+  const remarks = document.getElementById('inc-remarks').value.trim();
 
-// ====== RENDER / SUM / CHARTS ======
-function render(exp, inc) {
-  entriesList.innerHTML = "";
-  // Expenses
-  exp.forEach(function(r){
-    var e = document.createElement("div"); e.className = "entry";
-    e.innerHTML = '\n      <div class="info">\n        <div class="date">'+(r.date||'')+' (Expense)</div>\n        <div class="amount">-₱'+(Number(r.amount).toFixed(2))+'</div>\n        <div class="meta">'+(r.method||'')+' · '+(r.category||'')+'</div>\n      </div>\n      <button class="deleteBtn" data-sheet="Expenses" data-row="'+(r.idx+2)+'">🗑</button>';
-    entriesList.appendChild(e);
-  });
-  // Income
-  inc.forEach(function(r){
-    var e = document.createElement("div"); e.className = "entry";
-    e.innerHTML = '\n      <div class="info">\n        <div class="date">'+(r.date||'')+' (Income)</div>\n        <div class="amount">₱'+(Number(r.amount).toFixed(2))+'</div>\n        <div class="meta">'+(r.source||'')+'</div>\n      </div>\n      <button class="deleteBtn" data-sheet="Income" data-row="'+(r.idx+2)+'">🗑</button>';
-    entriesList.appendChild(e);
-  });
+  if (!dateISO) return toast('Pick a date, time traveler.', false);
+  if (amount === null) return toast('Amount must be > 0.', false);
+  if (!source) return toast('Select a source.', false);
 
-  // Swipe handling
-  Array.prototype.forEach.call(document.querySelectorAll('.entry'), function(row){
-    var startX=0; var swiped=false; var btn=row.querySelector('.deleteBtn');
-    row.addEventListener('touchstart',function(e){startX=e.touches[0].clientX;});
-    row.addEventListener('touchmove',function(e){
-      var dx=e.touches[0].clientX-startX; 
-      if(dx<-30 && !swiped){btn.style.right='0'; swiped=true;}
-      if(dx>30 && swiped){btn.style.right='-60px'; swiped=false;}
+  document.getElementById('inc-submit').disabled = true;
+  google.script.run.withSuccessHandler(() => {
+    toast('Income saved.');
+    document.getElementById('inc-amount').value = '';
+    document.getElementById('inc-remarks').value = '';
+    document.getElementById('inc-submit').disabled = false;
+  }).withFailureHandler(err => {
+    toast(err.message || 'Failed to save income.', false);
+    document.getElementById('inc-submit').disabled = false;
+  }).addIncome({dateISO, amount, source, remarks});
+});
+
+// Submit Expense
+document.getElementById('exp-submit').addEventListener('click', () => {
+  const dateISO = document.getElementById('exp-date').value;
+  const amount = parseAmount(document.getElementById('exp-amount'));
+  const source = document.getElementById('exp-source').value;
+  const category = document.getElementById('exp-category').value.trim();
+  const remarks = document.getElementById('exp-remarks').value.trim();
+
+  if (!dateISO) return toast('Pick a date, oracle.', false);
+  if (amount === null) return toast('Amount must be > 0.', false);
+  if (!source) return toast('Select a source.', false);
+
+  document.getElementById('exp-submit').disabled = true;
+  google.script.run.withSuccessHandler(() => {
+    toast('Expense saved.');
+    document.getElementById('exp-amount').value = '';
+    document.getElementById('exp-remarks').value = '';
+    // leave category sticky, because humans repeat themselves
+    document.getElementById('exp-submit').disabled = false;
+  }).withFailureHandler(err => {
+    toast(err.message || 'Failed to save expense.', false);
+    document.getElementById('exp-submit').disabled = false;
+  }).addExpense({dateISO, amount, source, category, remarks});
+});
+
+// View tab logic
+const filterIds = ['filter-year','filter-month','filter-source','filter-category'];
+filterIds.forEach(id => document.getElementById(id).addEventListener('change', refreshView));
+document.getElementById('refresh-view').addEventListener('click', refreshView);
+
+function getFilters() {
+  const year = Number(document.getElementById('filter-year').value) || null;
+  const month = document.getElementById('filter-month').value ? Number(document.getElementById('filter-month').value) : null;
+  const source = document.getElementById('filter-source').value || null;
+  const category = document.getElementById('filter-category').value || null;
+  return { year, month, source, category };
+}
+
+function refreshView() {
+  const filters = getFilters();
+  google.script.run.withSuccessHandler(renderView).withFailureHandler(err => {
+    toast(err.message || 'Failed to load logs.', false);
+  }).fetchLogs(filters);
+}
+
+// initial view load after short delay to allow year dropdown populate
+setTimeout(refreshView, 300);
+
+// render
+function renderView({ok, rows, totals, sources, categories}) {
+  if (!ok) return;
+  document.getElementById('tot-income').textContent = (totals.income || 0).toFixed(2);
+  document.getElementById('tot-expense').textContent = (totals.expense || 0).toFixed(2);
+  document.getElementById('tot-net').textContent = (totals.net || 0).toFixed(2);
+
+  // Update filter choices for Source/Category
+  const srcSel = document.getElementById('filter-source');
+  const catSel = document.getElementById('filter-category');
+  const keep = (sel, items) => {
+    const cur = sel.value;
+    sel.innerHTML = '<option value="">All</option>';
+    items.forEach(v => {
+      const o = document.createElement('option'); o.value = v; o.textContent = v; sel.appendChild(o);
     });
-  });
-
-  // Delete handlers (iOS-style confirm)
-  Array.prototype.forEach.call(document.querySelectorAll(".deleteBtn"), function(btn){
-    btn.addEventListener("click", function(){
-      var sheet = btn.getAttribute("data-sheet");
-      var rowIndex = parseInt(btn.getAttribute("data-row"), 10);
-      var modal = document.getElementById('iosModal');
-      var modalText = document.getElementById('iosModalText');
-      modalText.textContent = "Delete this entry permanently?";
-      modal.style.display = 'flex';
-
-      var cancelBtn = document.getElementById('iosCancel');
-      var confirmBtn = document.getElementById('iosConfirm');
-
-      function handleCancel(){
-        modal.style.display = 'none';
-        cancelBtn.removeEventListener('click', handleCancel);
-        confirmBtn.removeEventListener('click', handleConfirm);
-      }
-      function handleConfirm(){
-        modal.style.display = 'none';
-        cancelBtn.removeEventListener('click', handleCancel);
-        confirmBtn.removeEventListener('click', handleConfirm);
-        robustPost({ delete: true, sheet: sheet, rowIndex: rowIndex })
-          .then(function(){ fetchData(); })
-          .catch(function(){ document.getElementById('statusBar').style.display='block'; alert("Delete failed. See status line."); });
-      }
-
-      cancelBtn.addEventListener('click', handleCancel);
-      confirmBtn.addEventListener('click', handleConfirm);
-    });
-  });
-}
-
-function sum(exp, inc) {
-  var te = 0, ti = 0; var mt = {}; expenseMethods.forEach(function(m){ mt[m] = 0; });
-  exp.forEach(function(r){ var a = Number(r.amount)||0; te += a; if (mt.hasOwnProperty(r.method)) mt[r.method] += a; else if(r.method){ mt[r.method] = (mt[r.method]||0) + a; } });
-  inc.forEach(function(r){ ti += (Number(r.amount)||0); });
-  totalIncomeElem.textContent = ti.toFixed(2); totalExpenseElem.textContent = te.toFixed(2);
-  methodsSummary.innerHTML = ""; for (var m in mt) { var s = document.createElement("div"); s.textContent = m+': ₱'+((mt[m] || 0).toFixed(2)); methodsSummary.appendChild(s); }
-  if (window.expenseChart) { window.expenseChart.destroy(); }
-  var ctx1 = document.getElementById('expensePie').getContext('2d');
-  window.expenseChart = new Chart(ctx1, {
-    type: 'doughnut',
-    data: {
-      labels: Object.keys(mt),
-      datasets: [{
-        data: Object.values(mt),
-        backgroundColor: [
-          'rgba(0,122,255,0.9)',
-          'rgba(52,199,89,0.9)',
-          'rgba(255,149,0,0.9)',
-          'rgba(255,59,48,0.9)',
-          'rgba(175,82,222,0.9)',
-          'rgba(90,200,250,0.9)',
-          'rgba(255,204,0,0.9)',
-          'rgba(50,215,75,0.9)',
-          'rgba(255,159,10,0.9)',
-          'rgba(191,90,242,0.9)',
-          'rgba(10,132,255,0.9)',
-          'rgba(255,214,10,0.9)'
-        ],
-        borderWidth: 0
-      }]
-    },
-    options: {
-      cutout: '55%',
-      animation: { animateScale: true },
-      plugins: { legend: { display: false } }
-    }
-  });
-}
-
-// ====== INIT ======
-// Backend quick setter
-function updateBackendHost(){ try{ backendHost.textContent = new URL(WEBAPP_URL).hostname; }catch(e){ backendHost.textContent = 'invalid'; } }
-if (backendBtn) {
-  backendBtn.onclick = function(){
-    var u = prompt('Enter Apps Script Web App URL (ends with /exec):', WEBAPP_URL);
-    if (!u) return;
-    WEBAPP_URL = u.trim();
-    localStorage.setItem('EXPENSE_WEBAPP_URL', WEBAPP_URL);
-    updateBackendHost();
-    lastError.textContent = 'Backend URL saved.';
+    if ([...sel.options].some(o => o.value === cur)) sel.value = cur;
   };
+  keep(srcSel, sources);
+  keep(catSel, categories);
+
+  // Active filter chips
+  const chips = document.getElementById('active-filters');
+  chips.innerHTML = '';
+  const f = getFilters();
+  const addChip = (label, val) => {
+    if (!val) return;
+    const c = document.createElement('div'); c.className = 'chip'; c.textContent = label + ': ' + val; chips.appendChild(c);
+  };
+  addChip('Year', f.year);
+  addChip('Month', f.month);
+  addChip('Source', f.source);
+  addChip('Category', f.category);
+
+  // Rows
+  const tbody = document.getElementById('log-body');
+  tbody.innerHTML = '';
+  rows.forEach(r => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${r.type}</td>
+      <td>${r.dateISO}</td>
+      <td>${Number(r.amount).toFixed(2)}</td>
+      <td>${r.source || ''}</td>
+      <td>${r.category || ''}</td>
+      <td>${escapeHtml(r.remarks || '')}</td>
+      <td><button class="delete-btn" data-sheet="${r.sheetName}" data-row="${r.sheetRow}">Delete</button></td>
+    `;
+    tbody.appendChild(tr);
+  });
+
+  // hook deletes
+  tbody.querySelectorAll('.delete-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const sheet = btn.getAttribute('data-sheet');
+      const row = Number(btn.getAttribute('data-row'));
+      // Confirm summary
+      const summary = [...btn.closest('tr').children].slice(0,6).map(td => td.textContent.trim()).join(' | ');
+      if (!confirm(`Delete this entry?\n\n${summary}`)) return;
+      btn.disabled = true;
+      google.script.run.withSuccessHandler(() => {
+        toast('Deleted.');
+        refreshView();
+      }).withFailureHandler(err => {
+        toast(err.message || 'Delete failed.', false);
+        btn.disabled = false;
+      }).deleteEntry(sheet, row);
+    });
+  });
 }
-updateBackendHost();
-// ====== INIT ======
-try { dateInput.valueAsDate = new Date(); } catch(e) { dateInput.value = normalizeDateString(new Date()); }
 
-dateDisplay.textContent = fmtNice(dateInput.value);
-
-btnIncome.onclick = function(){ setMode("income"); };
-btnExpense.onclick = function(){ setMode("expense"); };
-btnView.onclick = function(){ setMode("view"); };
-
-// default load
-setMode("expense");
-
-// ====== TESTS ======
-(function runTests(){
-  function assertEq(name, a, b){ if(String(a)!==String(b)){ console.error('[TEST FAIL]', name, a, '!=', b); } else { console.log('[TEST PASS]', name); } }
-  // date normalize
-  assertEq('normalize string', normalizeDateString('2025-11-02'), '2025-11-02');
-  assertEq('normalize Date', normalizeDateString(new Date('2025-11-02')).slice(0,10), '2025-11-02');
-  // shapers cope with weird column order
-  var rawExp=['2025-11-02','Cash','Grocery','123.45'];
-  var rawInc=[5,'2025-11-05','WCC','999.99'];
-  var e1=shapeExpenseRow(rawExp, 0); var i1=shapeIncomeRow(rawInc, 1);
-  assertEq('shapeExpenseRow.amount', Number(e1.amount).toFixed(2), '123.45');
-  assertEq('shapeIncomeRow.amount', Number(i1.amount).toFixed(2), '999.99');
-})();
+function escapeHtml(s) {
+  return s.replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));
+}
 </script>
 </body>
 </html>
