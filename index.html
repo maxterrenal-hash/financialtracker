@@ -1,32 +1,3 @@
-<script>
-const API_BASE = 'PASTE_YOUR_WEB_APP_URL_HERE'; // e.g., https://script.google.com/macros/s/AKfy.../exec
-
-async function apiGet(params){
-  const url = new URL(API_BASE);
-  Object.entries(params).forEach(([k,v])=>{ if(v!==null && v!==undefined && v!=='') url.searchParams.set(k,String(v)); });
-  const r = await fetch(url, {method:'GET'});
-  return r.json();
-}
-async function apiPost(action, payload){
-  const r = await fetch(API_BASE, {
-    method:'POST',
-    headers:{'Content-Type':'application/json'},
-    body: JSON.stringify({action, payload})
-  });
-  return r.json();
-}
-async function apiDelete(sheetName, sheetRow){
-  const r = await fetch(API_BASE, {
-    method:'POST',
-    headers:{'Content-Type':'application/json'},
-    body: JSON.stringify({action:'delete', sheetName, sheetRow})
-  });
-  return r.json();
-}
-</script>
-
-
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -312,86 +283,42 @@ async function apiDelete(sheetName, sheetRow){
 <div id="toast" class="toast"></div>
 
 <script>
-// Mock META (replaces <?= JSON.stringify(meta) ?>)
-const META = {
-  incomeSources: ['Gcash','WCC','TMC-SL','Manila Med','Others'],
-  expenseSources: ['Cash','Gcash','BPI CC','SB CB','SB RC','UnionBank'],
-  defaultCategories: ['Duty Food','House Food','Kids','Personal','Utilities','Subscription','Media','Gas','Car','Grocery','Insurance','Clothing','Loan','Travel','Others']
-};
+// ==== Option B client: GitHub Pages frontend + Apps Script JSON/JSONP API ====
+// Set your deployed Web App URL here (execute as Me; anyone with link)
+const API_BASE = 'https://script.google.com/macros/s/AKfycbzCRBUKowiySmCgu8V1y5cpXSj_S9MHJAwuYflVoQjGn0uniPXqw0b2Sl80a2WwlCqG/exec';
 
-// Minimal mock of google.script.run
-const google = {
-  script: {
-    run: {
-      withSuccessHandler(fn){ this._ok = fn; return this; },
-      withFailureHandler(fn){ this._fail = fn; return this; },
-      getMeta(){ setTimeout(()=>this._ok({ todayISO: new Date().toISOString().slice(0,10) }), 100); },
-      addIncome(payload){ mockAdd('Income', payload, this); },
-      addExpense(payload){ mockAdd('Expense', payload, this); },
-      fetchLogs(filters){ setTimeout(()=> this._ok(mockFetch(filters)), 120); },
-      deleteEntry(sheetName, sheetRow){ mockDelete(sheetName, sheetRow, this); }
-    }
-  }
-};
-
-// In-memory mock data
-let ledger = [
-  {type:'Income', dateISO:'2025-11-01', amount:12000, source:'Manila Med', category:'', remarks:'Honorarium', sheetName:'Income', sheetRow:2},
-  {type:'Expense', dateISO:'2025-11-01', amount:350, source:'Cash', category:'Duty Food', remarks:'ED snacks', sheetName:'Expenses', sheetRow:2},
-  {type:'Expense', dateISO:'2025-11-02', amount:2200, source:'Gcash', category:'Grocery', remarks:'Weekend run', sheetName:'Expenses', sheetRow:3},
-  {type:'Income', dateISO:'2025-11-03', amount:5000, source:'WCC', category:'', remarks:'Lecture', sheetName:'Income', sheetRow:3},
-];
-
-function nextRow(sheetName){
-  const same = ledger.filter(r => r.sheetName===sheetName);
-  return same.length ? Math.max(...same.map(r=>r.sheetRow))+1 : 2;
+// --- JSONP GET (readable cross-origin on GH Pages) ---
+function jsonp(params, cbName){
+  const url = new URL(API_BASE);
+  Object.entries(params).forEach(([k,v])=>{ if(v!==undefined && v!==null && v!=='') url.searchParams.set(k, String(v)); });
+  url.searchParams.set('callback', cbName);
+  const s = document.createElement('script'); s.src = url.toString();
+  // cleanup to avoid piling up tags
+  s.onload = s.onerror = ()=>{ setTimeout(()=>s.remove(), 0); };
+  document.body.appendChild(s);
 }
 
-function mockAdd(type, payload, ctx){
-  const entry = {
-    type,
-    dateISO: payload.dateISO,
-    amount: Number(payload.amount),
-    source: payload.source,
-    category: type==='Expense' ? (payload.category||'') : '',
-    remarks: payload.remarks || '',
-    sheetName: type==='Income' ? 'Income' : 'Expenses',
-    sheetRow: nextRow(type==='Income' ? 'Income' : 'Expenses')
-  };
-  if (!(entry.amount>0)) { ctx._fail?.({message:'Amount must be > 0.'}); return; }
-  ledger.push(entry);
-  setTimeout(()=> ctx._ok?.({ok:true}), 120);
-}
-
-function mockFetch(filters){
-  let rows = ledger.slice();
-  rows = rows.filter(r => {
-    const [y,m,d] = r.dateISO.split('-').map(x=>parseInt(x,10));
-    const rowDate = new Date(y, m-1, d);
-    if (filters.year && y !== Number(filters.year)) return false;
-    if (filters.month && m !== Number(filters.month)) return false;
-    if (filters.start){ const s = new Date(filters.start); if (rowDate < s) return false; }
-    if (filters.end){ const e = new Date(filters.end); if (rowDate > e) return false; }
-    if (filters.source && filters.source !== '' && r.source !== filters.source) return false;
-    if (filters.category && filters.category !== '' && (r.category||'') !== filters.category) return false;
+// --- POST (opaque OK). We don't read body; we refresh via GET after. ---
+async function apiPost(action, payload){
+  try{
+    await fetch(API_BASE, {
+      method: 'POST',
+      mode: 'no-cors', // opaque, but request is delivered
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action, payload })
+    });
     return true;
-  });
-  rows.sort((a,b)=> a.dateISO<b.dateISO ? 1 : a.dateISO>b.dateISO ? -1 : a.type.localeCompare(b.type));
-  const totals = rows.reduce((acc,r)=>{ if(r.type==='Income') acc.income+=(+r.amount||0); else acc.expense+=(+r.amount||0); return acc; }, {income:0,expense:0});
-  totals.net = +(totals.income - totals.expense).toFixed(2);
-  const sources = Array.from(new Set(rows.map(r=>r.source).filter(Boolean))).sort();
-  const categories = Array.from(new Set(rows.map(r=>r.category).filter(Boolean))).sort();
-  return { ok:true, rows, totals, sources, categories };
+  }catch(e){ return false; }
 }
 
-function mockDelete(sheetName, sheetRow, ctx){
-  const idx = ledger.findIndex(r => r.sheetName===sheetName && r.sheetRow===Number(sheetRow));
-  if (idx === -1) { ctx._fail?.({message:'Not found'}); return; }
-  ledger.splice(idx, 1);
-  setTimeout(()=> ctx._ok?.({ok:true}), 100);
+// --- Toast ---
+function toast(msg, ok=true) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.style.borderColor = ok ? 'var(--ok)' : 'var(--danger)';
+  t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 1800);
 }
 
-// Tabs
+// --- Tabs ---
 document.querySelectorAll('.tab-btn').forEach(btn => {
   btn.addEventListener('click', () => {
     document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
@@ -402,42 +329,37 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
   });
 });
 
-// Toast
-function toast(msg, ok=true) {
-  const t = document.getElementById('toast');
-  t.textContent = msg;
-  t.style.borderColor = ok ? 'var(--ok)' : 'var(--danger)';
-  t.classList.add('show');
-  setTimeout(() => t.classList.remove('show'), 1800);
-}
-
-// Populate selects and init
-function initUI() {
-  google.script.run.withSuccessHandler(({todayISO}) => {
-    document.getElementById('inc-date').value = todayISO;
-    document.getElementById('exp-date').value = todayISO;
-  }).getMeta();
-
-  const incSel = document.getElementById('inc-source');
-  META.incomeSources.forEach(v => { const o=document.createElement('option'); o.value=o.textContent=v; incSel.appendChild(o); });
-  const expSel = document.getElementById('exp-source');
-  META.expenseSources.forEach(v => { const o=document.createElement('option'); o.value=o.textContent=v; expSel.appendChild(o); });
-  const dl = document.getElementById('exp-categories');
-  META.defaultCategories.forEach(v => { const o=document.createElement('option'); o.value=v; dl.appendChild(o); });
-
+// --- Meta & UI init ---
+let META = { incomeSources: [], expenseSources: [], defaultCategories: [] };
+window.handleMeta = ({todayISO, incomeSources, expenseSources, defaultCategories}) => {
+  META.incomeSources = incomeSources || [];
+  META.expenseSources = expenseSources || [];
+  META.defaultCategories = defaultCategories || [];
+  // Dates default to server local ISO today
+  document.getElementById('inc-date').value = todayISO;
+  document.getElementById('exp-date').value = todayISO;
+  // Populate selects
+  const incSel = document.getElementById('inc-source'); incSel.innerHTML = '';
+  META.incomeSources.forEach(v=>{ const o=document.createElement('option'); o.value=o.textContent=v; incSel.appendChild(o); });
+  const expSel = document.getElementById('exp-source'); expSel.innerHTML = '';
+  META.expenseSources.forEach(v=>{ const o=document.createElement('option'); o.value=o.textContent=v; expSel.appendChild(o); });
+  const dl = document.getElementById('exp-categories'); dl.innerHTML='';
+  META.defaultCategories.forEach(v=>{ const o=document.createElement('option'); o.value=v; dl.appendChild(o); });
+};
+function initUI(){
+  // Year filter (current ±4)
   const ySel = document.getElementById('filter-year');
-  const now = new Date(); const curY = now.getFullYear();
-  for (let y = curY + 1; y >= curY - 4; y--) {
-    const o = document.createElement('option');
-    o.value = String(y); o.textContent = y; if (y === curY) o.selected = true;
-    ySel.appendChild(o);
-  }
+  const now = new Date(); const curY = now.getFullYear(); ySel.innerHTML='';
+  for(let y = curY + 1; y >= curY - 4; y--){ const o=document.createElement('option'); o.value=String(y); o.textContent=y; if(y===curY) o.selected=true; ySel.appendChild(o); }
+  // Load meta via JSONP
+  jsonp({action:'getmeta'}, 'handleMeta');
 }
 initUI();
 
 function parseAmount(el){ const v = Number(el.value); if(!isFinite(v) || v<=0) return null; return +v.toFixed(2); }
 
-document.getElementById('inc-submit').addEventListener('click', () => {
+// --- Income submit ---
+document.getElementById('inc-submit').addEventListener('click', async () => {
   const dateISO = document.getElementById('inc-date').value;
   const amount = parseAmount(document.getElementById('inc-amount'));
   const source = document.getElementById('inc-source').value;
@@ -446,15 +368,14 @@ document.getElementById('inc-submit').addEventListener('click', () => {
   if(amount===null) return toast('Amount must be > 0.', false);
   if(!source) return toast('Select a source.', false);
   const btn = document.getElementById('inc-submit'); btn.disabled = true;
-  google.script.run.withSuccessHandler(()=>{
-    toast('Income saved.');
-    document.getElementById('inc-amount').value='';
-    document.getElementById('inc-remarks').value='';
-    btn.disabled=false; refreshView();
-  }).withFailureHandler(err=>{ toast(err.message||'Failed.', false); btn.disabled=false; }).addIncome({dateISO, amount, source, remarks});
+  const ok = await apiPost('addincome', {dateISO, amount, source, remarks});
+  if(ok){ toast('Income saved.'); document.getElementById('inc-amount').value=''; document.getElementById('inc-remarks').value=''; refreshView(); }
+  else { toast('Failed to save.', false); }
+  btn.disabled=false;
 });
 
-document.getElementById('exp-submit').addEventListener('click', () => {
+// --- Expense submit ---
+document.getElementById('exp-submit').addEventListener('click', async () => {
   const dateISO = document.getElementById('exp-date').value;
   const amount = parseAmount(document.getElementById('exp-amount'));
   const source = document.getElementById('exp-source').value;
@@ -464,14 +385,13 @@ document.getElementById('exp-submit').addEventListener('click', () => {
   if(amount===null) return toast('Amount must be > 0.', false);
   if(!source) return toast('Select a source.', false);
   const btn = document.getElementById('exp-submit'); btn.disabled = true;
-  google.script.run.withSuccessHandler(()=>{
-    toast('Expense saved.');
-    document.getElementById('exp-amount').value='';
-    document.getElementById('exp-remarks').value='';
-    btn.disabled=false; refreshView();
-  }).withFailureHandler(err=>{ toast(err.message||'Failed.', false); btn.disabled=false; }).addExpense({dateISO, amount, source, category, remarks});
+  const ok = await apiPost('addexpense', {dateISO, amount, source, category, remarks});
+  if(ok){ toast('Expense saved.'); document.getElementById('exp-amount').value=''; document.getElementById('exp-remarks').value=''; refreshView(); }
+  else { toast('Failed to save.', false); }
+  btn.disabled=false;
 });
 
+// --- View (filters + load) ---
 const filterIds = ['filter-year','filter-month','filter-source','filter-category','filter-start','filter-end'];
 filterIds.forEach(id => document.getElementById(id).addEventListener('change', refreshView));
 document.getElementById('refresh-view').addEventListener('click', refreshView);
@@ -486,48 +406,24 @@ function getFilters(){
   return { year, month, source, category, start, end };
 }
 
-function refreshView(){
-  const filters = getFilters();
-  google.script.run.withSuccessHandler(renderView).withFailureHandler(err=>{
-    toast(err.message||'Failed to load.', false);
-  }).fetchLogs(filters);
-}
-
-setTimeout(refreshView, 200);
-
-function renderView({ok, rows, totals, sources, categories}){
-  if(!ok) return;
+window.handleLogs = ({ok, rows, totals, sources, categories}) => { if(!ok) return;
   document.getElementById('tot-income').textContent = (totals.income||0).toFixed(2);
   document.getElementById('tot-expense').textContent = (totals.expense||0).toFixed(2);
   const netEl = document.getElementById('tot-net');
   const netVal = (typeof totals.net === 'number' ? totals.net : ((totals.income||0)-(totals.expense||0)));
   netEl.textContent = netVal.toFixed(2);
-  netEl.classList.remove('ok','danger');
-  if (netVal > 0) netEl.classList.add('ok');
-  else if (netVal < 0) netEl.classList.add('danger');
-  const srcSel = document.getElementById('filter-source');
-  const catSel = document.getElementById('filter-category');
-  const keep = (sel, items) => {
-    const cur = sel.value;
-    sel.innerHTML = '<option value="">All</option>';
-    items.forEach(v => { const o=document.createElement('option'); o.value=v; o.textContent=v; sel.appendChild(o); });
-    if ([...sel.options].some(o => o.value === cur)) sel.value = cur;
-  };
-  keep(srcSel, sources);
-  keep(catSel, categories);
-
-  const chips = document.getElementById('active-filters');
-  chips.innerHTML = '';
-  const f = getFilters();
-  const addChip = (label, val) => { if(!val) return; const c=document.createElement('div'); c.className='chip'; c.textContent = label+': '+val; chips.appendChild(c); };
-  addChip('Year', f.year);
-  addChip('Month', f.month);
-  addChip('Source', f.source);
-  addChip('Category', f.category);
-
-  const tbody = document.getElementById('log-body');
-  tbody.innerHTML = '';
-  rows.forEach(r => {
+  netEl.classList.remove('ok','danger'); if (netVal > 0) netEl.classList.add('ok'); else if (netVal < 0) netEl.classList.add('danger');
+  // Filter dropdowns (preserve current)
+  const keep = (sel, items)=>{ const cur = sel.value; sel.innerHTML = '<option value="">All</option>'; (items||[]).forEach(v=>{ const o=document.createElement('option'); o.value=v; o.textContent=v; sel.appendChild(o); }); if ([...sel.options].some(o=>o.value===cur)) sel.value=cur; };
+  keep(document.getElementById('filter-source'), sources);
+  keep(document.getElementById('filter-category'), categories);
+  // Chips
+  const chips = document.getElementById('active-filters'); chips.innerHTML='';
+  const f = getFilters(); const addChip=(label,val)=>{ if(!val) return; const c=document.createElement('div'); c.className='chip'; c.textContent = label+': '+val; chips.appendChild(c); };
+  addChip('Year', f.year); addChip('Month', f.month); addChip('Source', f.source); addChip('Category', f.category);
+  // Rows
+  const tbody = document.getElementById('log-body'); tbody.innerHTML='';
+  (rows||[]).forEach(r=>{
     const tr = document.createElement('tr');
     tr.innerHTML = `
       <td data-col="Type">${r.type}</td>
@@ -538,22 +434,22 @@ function renderView({ok, rows, totals, sources, categories}){
       <td data-col="Actions"><button class="delete-btn" data-sheet="${r.sheetName}" data-row="${r.sheetRow}">Delete</button></td>`;
     tbody.appendChild(tr);
   });
-
-  tbody.querySelectorAll('.delete-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const sheet = btn.getAttribute('data-sheet');
-      const row = Number(btn.getAttribute('data-row'));
+  // Bind deletes
+  tbody.querySelectorAll('.delete-btn').forEach(btn=>{
+    btn.addEventListener('click', async ()=>{
+      const sheet = btn.getAttribute('data-sheet'); const row = Number(btn.getAttribute('data-row'));
       const summary = [...btn.closest('tr').children].slice(0,5).map(td=>td.textContent.trim()).join(' | ');
-      if(!confirm(`Delete this entry?\n\n${summary}`)) return;
-      btn.disabled = true;
-      google.script.run.withSuccessHandler(()=>{ toast('Deleted.'); refreshView(); })
-        .withFailureHandler(err=>{ toast(err.message||'Delete failed.', false); btn.disabled=false; })
-        .deleteEntry(sheet, row);
+      if(!confirm(`Delete this entry?
+
+${summary}`)) return;
+      btn.disabled = true; const ok = await apiPost('delete', { sheetName: sheet, sheetRow: row });
+      if(ok){ toast('Deleted.'); refreshView(); } else { toast('Delete failed.', false); btn.disabled=false; }
     });
   });
-}
+};
 
-function escapeHtml(s){ return s.replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#039;'}[m])); }
+function refreshView(){ const f = getFilters(); jsonp({action:'fetchlogs', ...f}, 'handleLogs'); }
+setTimeout(refreshView, 200);
 </script>
 </body>
 </html>
