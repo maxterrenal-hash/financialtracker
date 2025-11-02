@@ -400,8 +400,14 @@ entryForm.addEventListener("submit", function(e){
   var modalText = document.getElementById('iosModalText');
   modalText.textContent = msg; modal.style.display = 'flex';
 
-  // Include date parts to let backend write a timezone-safe Date
-var dISO = dateInput.value; // 'YYYY-MM-DD'
+  // Ensure valid ISO date; fallback to today to avoid invalid/NaN dates reaching backend
+var isoToday = normalizeDateString(new Date());
+if (!(dateInput.value && dateInput.value.length>=10 && dateInput.value[4]==='-' && dateInput.value[7]==='-')) {
+  dateInput.value = isoToday;
+  dateDisplay.textContent = fmtNice(isoToday);
+}
+// Include date parts to let backend write a timezone-safe Date
+var dISO = dateInput.value; // 'YYYY-MM-DD' (guaranteed)
 var payload = { type: currentMode, date: dISO, dateY: Number(dISO.slice(0,4)), dateM: Number(dISO.slice(5,7)), dateD: Number(dISO.slice(8,10)), amount: amt };
   if (currentMode === "expense") { payload.method = methodSource.value; payload.category = category.value; }
   else { payload.source = methodSource.value; }
@@ -415,7 +421,7 @@ var payload = { type: currentMode, date: dISO, dateY: Number(dISO.slice(0,4)), d
     cancelBtn.removeEventListener('click', handleCancel);
     confirmBtn.removeEventListener('click', handleConfirm);
     robustPost(payload)
-      .then(function(res){ console.log('[POST] success', res); dateInput.value = ""; amountInput.value = ""; fetchData(); })
+      .then(function(res){ console.log('[POST] success', res); var todayIso = normalizeDateString(new Date()); try { dateInput.valueAsDate = new Date(); } catch(e) { dateInput.value = todayIso; } dateDisplay.textContent = fmtNice(dateInput.value); amountInput.value = ""; fetchData(); })
       .catch(function(){ document.getElementById('statusBar').style.display='block'; alert("Network or server error. See status line."); });
   }
   cancelBtn.addEventListener('click', handleCancel);
