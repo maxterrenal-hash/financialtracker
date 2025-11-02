@@ -413,13 +413,13 @@ function render(exp, inc) {
   // Expenses
   exp.forEach(function(r){
     var e = document.createElement("div"); e.className = "entry";
-    e.innerHTML = '\n      <div class="info">\n        <div class="date">'+(r.date||'')+' (Expense)</div>\n        <div class="amount">-₱'+(Number(r.amount).toFixed(2))+'</div>\n        <div class="meta">'+(r.method||'')+' · '+(r.category||'')+'</div>\n      </div>\n      <button class="deleteBtn" data-sheet="Expenses" data-row="'+r.idx+'">🗑</button>';
+    e.innerHTML = '\n      <div class="info">\n        <div class="date">'+(r.date||'')+' (Expense)</div>\n        <div class="amount">-₱'+(Number(r.amount).toFixed(2))+'</div>\n        <div class="meta">'+(r.method||'')+' · '+(r.category||'')+'</div>\n      </div>\n      <button class="deleteBtn" data-sheet="Expenses" data-row="'+(r.idx+2)+'">🗑</button>';
     entriesList.appendChild(e);
   });
   // Income
   inc.forEach(function(r){
     var e = document.createElement("div"); e.className = "entry";
-    e.innerHTML = '\n      <div class="info">\n        <div class="date">'+(r.date||'')+' (Income)</div>\n        <div class="amount">₱'+(Number(r.amount).toFixed(2))+'</div>\n        <div class="meta">'+(r.source||'')+'</div>\n      </div>\n      <button class="deleteBtn" data-sheet="Income" data-row="'+r.idx+'">🗑</button>';
+    e.innerHTML = '\n      <div class="info">\n        <div class="date">'+(r.date||'')+' (Income)</div>\n        <div class="amount">₱'+(Number(r.amount).toFixed(2))+'</div>\n        <div class="meta">'+(r.source||'')+'</div>\n      </div>\n      <button class="deleteBtn" data-sheet="Income" data-row="'+(r.idx+2)+'">🗑</button>';
     entriesList.appendChild(e);
   });
 
