@@ -93,20 +93,7 @@
   input, select, textarea { max-width: 100%; }
   #inc-remarks, #exp-remarks { display:block; width:100%; max-width:100%; }
   .wrap { overflow-x: hidden; }
-  /* Combobox styling to match selects */
-  .combo { position: relative; }
-  .combo input {
-    appearance: none; -webkit-appearance: none; width: 100%;
-    background: var(--input); color: var(--text);
-    border: 1px solid var(--border); border-radius: 12px;
-    padding: 14px 40px 14px 12px; outline: none; font-size: 16px; height:44px; line-height:1.2;
-  }
-  .combo input:focus { border-color: var(--focus); box-shadow: 0 0 0 3px rgba(124,58,237,.25); }
-  .combo::after { content: ""; position: absolute; right: 12px; top: 50%; transform: translateY(-25%);
-    width: 0; height: 0; border-left: 6px solid transparent; border-right: 6px solid transparent; border-top: 7px solid var(--muted); pointer-events: none; }
-  /* Clickable chips */
-  .chips button { background: var(--chip); border:1px solid var(--border); border-radius:999px; padding:6px 10px; font-size:.8rem; color:var(--text); cursor:pointer; }
-  .chips button:hover { border-color: var(--accent); } 
+  /* (combobox removed; Category now a select) */ 
 /* Make the calendar icon visible on dark and keep layout */
 input[type=date]::-webkit-calendar-picker-indicator{ filter: invert(1) opacity(.8); }
   /* Stats bar: 3 consistent cards (Income, Expenses, Net) */
@@ -203,15 +190,10 @@ input[type=date]::-webkit-calendar-picker-indicator{ filter: invert(1) opacity(.
     <div class="row">
       <div class="col-12">
         <label for="exp-category">Category</label>
-        <div class="combo">
-          <input list="exp-categories" id="exp-category" placeholder="Start typing or tap a chip below…" />
-        </div>
-        <datalist id="exp-categories"></datalist>
-        <!-- Quick-pick chips for category (also fills the input) -->
-        <div class="chips" id="exp-cat-chips" style="margin-top:6px"></div>
+        <select id="exp-category"></select>
       </div>
       <div class="col-12">
-        <label for="exp-remarks">Remarks</label>
+        <label for="exp-remarks">Remarks</label></label>
         <input type="text" id="exp-remarks" placeholder="optional" />
       </div>
     </div>
@@ -338,6 +320,7 @@ function goTab(key){
   });
   document.querySelectorAll('section[id^="tab-"]').forEach(s=> s.style.display='none');
   document.getElementById('tab-'+key).style.display='';
+  if (key === 'view') { refreshView(); }
 }
 document.querySelectorAll('.tab-btn').forEach(btn=>{ btn.addEventListener('click', ()=>{ goTab(btn.dataset.tab); }); });
 
@@ -345,19 +328,31 @@ document.querySelectorAll('.tab-btn').forEach(btn=>{ btn.addEventListener('click
 let META = { incomeSources:[], expenseSources:[], defaultCategories:[] };
 function populateFromMeta(meta){
   const m = meta || FALLBACK_META;
-  META.incomeSources   = (m.incomeSources && m.incomeSources.length) ? m.incomeSources : FALLBACK_META.incomeSources;
-  META.expenseSources  = (m.expenseSources && m.expenseSources.length) ? m.expenseSources : FALLBACK_META.expenseSources;
+  // Merge meta with fallbacks
+  META.incomeSources     = (m.incomeSources && m.incomeSources.length) ? m.incomeSources : FALLBACK_META.incomeSources;
+  META.expenseSources    = (m.expenseSources && m.expenseSources.length) ? m.expenseSources : FALLBACK_META.expenseSources;
   META.defaultCategories = (m.defaultCategories && m.defaultCategories.length) ? m.defaultCategories : FALLBACK_META.defaultCategories;
-  // Fill selects
-  const incSel = document.getElementById('inc-source'); incSel.innerHTML='';
-  META.incomeSources.forEach(v=>{ const o=document.createElement('option'); o.value=o.textContent=v; incSel.appendChild(o); });
-  const expSel = document.getElementById('exp-source'); expSel.innerHTML='';
-  META.expenseSources.forEach(v=>{ const o=document.createElement('option'); o.value=o.textContent=v; expSel.appendChild(o); });
-  // datalist
-  const dl = document.getElementById('exp-categories'); dl.innerHTML='';
-  META.defaultCategories.forEach(v=>{ const o=document.createElement('option'); o.value=v; dl.appendChild(o); });
-  // chips (quick pick)
-  const chips = document.getElementById('exp-cat-chips'); if (chips){ chips.innerHTML=''; META.defaultCategories.forEach(v=>{ const b=document.createElement('button'); b.type='button'; b.textContent=v; b.addEventListener('click', ()=>{ const inp=document.getElementById('exp-category'); inp.value=v; inp.dispatchEvent(new Event('input')); }); chips.appendChild(b); }); }
+
+  // Populate Income Source select
+  const incSel = document.getElementById('inc-source');
+  if (incSel){
+    incSel.innerHTML = '';
+    META.incomeSources.forEach(v=>{ const o=document.createElement('option'); o.value=o.textContent=v; incSel.appendChild(o); });
+  }
+
+  // Populate Expense Source select
+  const expSel = document.getElementById('exp-source');
+  if (expSel){
+    expSel.innerHTML = '';
+    META.expenseSources.forEach(v=>{ const o=document.createElement('option'); o.value=o.textContent=v; expSel.appendChild(o); });
+  }
+
+  // Populate Category select
+  const catSel = document.getElementById('exp-category');
+  if (catSel){
+    catSel.innerHTML = '';
+    META.defaultCategories.forEach(v=>{ const o=document.createElement('option'); o.value=o.textContent=v; catSel.appendChild(o); });
+  }
 }
 
 window.handleMeta = (d)=>{
@@ -466,7 +461,7 @@ document.getElementById('exp-submit').addEventListener('click', ()=>{
   const dateISO = document.getElementById('exp-date').value;
   const amount = parseAmount(document.getElementById('exp-amount'));
   const source = document.getElementById('exp-source').value;
-  const category = document.getElementById('exp-category').value.trim();
+  const category = document.getElementById('exp-category').value;
   const remarks = document.getElementById('exp-remarks').value.trim();
   if(!dateISO) return toast('Pick a date.', false);
   if(amount===null) return toast('Amount must be > 0', false);
